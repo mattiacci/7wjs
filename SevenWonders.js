@@ -1086,17 +1086,25 @@
           var turnsRef = self.server.child(gameName).child('turns');
           var playerField = document.createElement('div');
           var playerInterface = new PlayerInterface(playerField, turnsRef, id, game.players[id]);
+          var fields = [];
           for (var i = 0; i < game.numPlayers; i++) {
             if (i == id) {
               interfaces.push(playerInterface);
-              self.gameField.appendChild(playerField);
+              fields.push(playerField);
             } else {
               var remotePlayerField = document.createElement('div');
-              self.gameField.appendChild(remotePlayerField);
+              fields.push(remotePlayerField);
               var remotePlayerInterface = new RemotePlayer(remotePlayerField, turnsRef, i, game.players[i]);
               interfaces.push(remotePlayerInterface);
             }
           }
+
+          // Insert fields in an order that put the active player in the center
+          var startIndex = id - Math.floor((game.numPlayers - 1) / 2);
+          for (var i = 0; i < game.numPlayers; i++) {
+            self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
+          }
+
           self.currGame = new SevenWonders(interfaces, boards, hands);
           self.roomField.style.display = 'none';
         }

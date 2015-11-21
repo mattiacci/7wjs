@@ -1,0 +1,97 @@
+<script src="config.js"></script>
+<script src='https://cdn.firebase.com/v0/firebase.js'></script>
+<script type="text/javascript" src="SevenWonders.js"></script>
+
+
+<div id="game_room"></div>
+<div id="game_field"></div>
+
+<style>
+  #game_field {
+    display: flex;
+    flex-direction: row-reverse;
+    overflow-x: scroll;
+    white-space: nowrap;
+  }
+  .card {
+    vertical-align: text-top;
+    margin: 3px;
+    border: 1px solid black;
+    width: 128px;
+    height: 197px;
+    padding: 10px;
+    display: inline-block;
+    verticalAlign: text-top;
+    position: relative;
+  }
+  .card.selected {
+    margin: 0;
+    border: 4px solid red !important;
+  }
+  .board {
+    background-size: contain;
+    background-position: top;
+    background-repeat: no-repeat;
+    width: 510px;
+    height: 224px;
+    position: absolute;
+  }
+  .back {
+    position: absolute;
+    border-radius: 12px;
+    width: 128px;
+    height: 197px;
+    top: 169px;
+    z-index: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+  .wonder {
+    margin-left: 15px;
+    width: 510px;
+    height: 390px;
+    position: relative;
+  }
+</style>
+
+<script>
+
+
+  var gameRoom = new GameRoom(document.getElementById('game_room'), document.getElementById('game_field'));
+  
+  var params = (function() {
+    var result = {};
+    if (window.location.search) {
+        // split up the query string and store in an associative array
+        var params = window.location.search.slice(1).split('&');
+        for (var i = 0; i < params.length; i++) {
+            var tmp = params[i].split('=');
+            result[tmp[0]] = unescape(tmp[1]);
+        }
+    }
+    return result;
+  }());
+  
+  function go() {
+    if (params['name'] && params['game']) {
+      document.querySelector('#game_room input').value = params['name'];
+      var game = document.getElementById('game_' + params['game']);
+      if (game == null) {
+        return false;
+      } else {
+        game.querySelector('button').click();
+        return true;
+      }
+    }
+  }
+    
+  function retry(func) {
+    if (!func()) {
+      window.setTimeout(function() {
+        return retry(func);
+      }, 100);
+    }
+  }
+  
+  retry(go);
+</script>

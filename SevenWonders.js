@@ -1100,7 +1100,7 @@
           }
 
           // Insert fields in an order that put the active player in the center
-          var startIndex = id - Math.floor((game.numPlayers - 1) / 2);
+          var startIndex = id - Math.floor(game.numPlayers / 2);
           for (var i = 0; i < game.numPlayers; i++) {
             self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
           }
@@ -1867,6 +1867,30 @@
       this.field.appendChild(hand);
 
       // payment
+      var eastResources = document.createElement('div');
+      var content = 'Available resources for purchase from eastern neighbour: ';
+      var simple = [];
+      for (resource in Resource) {
+        var amount = this.currTurn.playerState.east.resources[Resource[resource]];
+        for (var i = 0; i < amount; i++) {
+          simple.push(resource);
+        }
+      }
+      content = content + simple.concat(this.currTurn.playerState.east.multiResources.filter(function(m) {
+        return m.length == 2;
+      }).map(function (m) {
+        return m.map(function (r) {
+          for (resource in Resource) {
+            if (Resource[resource] == r) {
+              return resource;
+            }
+          }
+        }).join('/');
+      })).join(', ');
+      eastResources.innerHTML = content;
+      eastResources.style.display = 'inline-block';
+      this.field.appendChild(eastResources);
+
       var eastPayment = document.createElement('div');
       var eastLabel = document.createElement('div');
       eastLabel.innerHTML = 'Resources to purchase from eastern neighbour (space separated): ';
@@ -1877,6 +1901,30 @@
       eastPayment.appendChild(eastLabel);
       eastPayment.appendChild(eastAmount);
       this.field.appendChild(eastPayment);
+
+      var westResources = document.createElement('div');
+      var content = 'Available resources for purchase from western neighbour: ';
+      var simple = [];
+      for (resource in Resource) {
+        var amount = this.currTurn.playerState.west.resources[Resource[resource]];
+        for (var i = 0; i < amount; i++) {
+          simple.push(resource);
+        }
+      }
+      content = content + simple.concat(this.currTurn.playerState.west.multiResources.filter(function(m) {
+        return m.length == 2;
+      }).map(function (m) {
+        return m.map(function (r) {
+          for (resource in Resource) {
+            if (Resource[resource] == r) {
+              return resource;
+            }
+          }
+        }).join('/');
+      })).join(', ');
+      westResources.innerHTML = content;
+      westResources.style.display = 'inline-block';
+      this.field.appendChild(westResources);
 
       var westPayment = document.createElement('div');
       var westLabel = document.createElement('div');
@@ -1906,12 +1954,12 @@
       go.innerHTML = 'Go';
       go.onclick = function() {
         var east = playerInterface.field.querySelector('.east').value.split(' ').map(function(resource) {
-          return resourceSymbols.indexOf(resource);
+          return resourceSymbols.indexOf(resource.toLowerCase());
         }).filter(function(resource) {
           return resource >= 0 && resource <= 6;
         });
         var west = playerInterface.field.querySelector('.west').value.split(' ').map(function(resource) {
-          return resourceSymbols.indexOf(resource);
+          return resourceSymbols.indexOf(resource.toLowerCase());
         }).filter(function(resource) {
           return resource >= 0 && resource <= 6;
         });
@@ -2030,7 +2078,7 @@
     this.field.appendChild(this.doneBox);
 	};
 
-    var resourceSymbols = ['Clay', 'Stone', 'Wood', 'Ore', 'Glass', 'Cloth', 'Paper'];
+    var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
     var backgroundColors = ['rgba(255,255,0,0.5)','rgba(192,192,192,0.5)','rgba(128,0,128,0.5)','rgba(255,0,0,0.5)','rgba(192,128,96,0.5)','rgba(0,128,0,0.5)','rgba(0,0,255,0.5)','rgba(255,255,255,0.5)'];
 
     this.drawCard = function(card, hasHandler) {

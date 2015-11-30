@@ -1003,49 +1003,14 @@
   var GameRoom = function(roomField, gameField) {
     this.roomField = roomField;
     this.gameField = gameField;
-    var self = this;
+    var gameRoom = self = this;
+
+    ReactDOM.render(
+      React.createElement(Lobby),
+      this.roomField
+    );
 
     this.server = new Firebase(window.FIREBASE_SERVER);
-
-    var nameLabel = document.createElement('span');
-    nameLabel.innerHTML = '<br>Player name: ';
-    var nameInput = document.createElement('input');
-    nameInput.type = 'text';
-
-    this.roomField.appendChild(nameLabel);
-    this.roomField.appendChild(nameInput);
-
-    var gamesLabel = document.createElement('div');
-    gamesLabel.innerHTML = '<br>Games';
-    var games = document.createElement('table');
-    games.innerHTML = '<tr><td>Name</td><td>Players</td><td>Join</td></tr>';
-
-    this.roomField.appendChild(gamesLabel);
-    this.roomField.appendChild(games);
-
-    this.listGame = function(gameName, game) {
-      var entry = document.getElementById('game_' + gameName);
-      if (!entry) {
-        entry = document.createElement('tr');
-        entry.id = 'game_' + gameName;
-        games.appendChild(entry);
-      }
-      entry.innerHTML = '';
-      var name = document.createElement('td');
-      name.innerHTML = gameName;
-      entry.appendChild(name);
-      var players = document.createElement('td');
-      players.innerHTML = game.players.join(', ');
-      entry.appendChild(players);
-      var joinCell = document.createElement('td');
-      var joinButton = document.createElement('button');
-      joinButton.innerHTML = 'Join';
-      joinButton.onclick = function() {
-        self.joinGame(gameName, nameInput.value);
-      };
-      joinCell.appendChild(joinButton);
-      entry.appendChild(joinCell);
-    };
 
     this.joinGame = function(gameName, playerName) {
       var ref = this.server.child(gameName);
@@ -1110,38 +1075,6 @@
         }
       });
     };
-
-    // check for games
-    this.server.on('child_added', function(snapshot) {
-      var game = snapshot.val();
-      self.listGame(snapshot.name(), game);
-    });
-
-    // check for updates
-    this.server.on('child_changed', function(snapshot) {
-      var game = snapshot.val();
-      self.listGame(snapshot.name(), game);
-    });
-
-    var createGameLabel = document.createElement('span');
-    createGameLabel.innerHTML = '<br>Create Game<br>Game name:';
-    var gameNameInput = document.createElement('input');
-    gameNameInput.type = 'text';
-    var playersLabel = document.createElement('span');
-    playersLabel.innerHTML = '<br>Number of players: ';
-    var playersInput = document.createElement('input');
-    playersInput.type = 'text';
-    var createGameButton = document.createElement('button');
-    createGameButton.innerHTML = 'Create';
-    createGameButton.onclick = function() {
-      self.createGame(gameNameInput.value, parseInt(playersInput.value), nameInput.value);
-    };
-
-    this.roomField.appendChild(createGameLabel);
-    this.roomField.appendChild(gameNameInput);
-    this.roomField.appendChild(playersLabel);
-    this.roomField.appendChild(playersInput);
-    this.roomField.appendChild(createGameButton);
 
     this.createGame = function(gameName, numPlayers, name) {
       this.server.child(gameName).transaction(function(current_value) {

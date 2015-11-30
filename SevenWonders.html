@@ -1,5 +1,10 @@
 <script src="config.js"></script>
-<script src='https://cdn.firebase.com/v0/firebase.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+<script src="lobby.js" type="text/babel"></script>
 <script src="SevenWonders.js"></script>
 <style>
   #game_field {
@@ -51,8 +56,6 @@
 <div id="game_field"></div>
 <script>
   (function() {
-    window.gameRoom = new GameRoom(document.getElementById('game_room'), document.getElementById('game_field'));
-
     var params = (function() {
       var result = {};
       if (window.location.search) {
@@ -67,6 +70,12 @@
     }());
 
     function go() {
+      // TODO: Add browserify or similar.
+      if (!window.Lobby) {
+        return false;
+      }
+      window.gameRoom = new GameRoom(document.getElementById('game_room'), document.getElementById('game_field'));
+
       if (params['name'] && params['game']) {
         document.querySelector('#game_room input').value = params['name'];
         var game = document.getElementById('game_' + params['game']);

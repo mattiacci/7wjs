@@ -1002,14 +1002,13 @@ var calcScienceScore = function(player) {
   }
 };
 
-var GameRoom = function(roomField, gameField) {
-  this.roomField = roomField;
+var GameRoom = function(appContainer, gameField) {
   this.gameField = gameField;
   var gameRoom = self = this;
 
   ReactDOM.render(
-    React.createElement(Lobby),
-    this.roomField
+    React.createElement(App),
+    appContainer
   );
 
   this.server = new Firebase(window.FIREBASE_SERVER);
@@ -1073,7 +1072,6 @@ var GameRoom = function(roomField, gameField) {
         }
 
         self.currGame = new SevenWonders(interfaces, boards, hands);
-        self.roomField.style.display = 'none';
       }
     });
   };
@@ -1097,7 +1095,6 @@ var GameRoom = function(roomField, gameField) {
           interfaces.push(remotePlayerInterface);
         }
         self.currGame = new SevenWonders(interfaces, boards, hands);
-        self.roomField.style.display = 'none';
         return {numPlayers: numPlayers, playersJoined: 1, players: [name], boards: boards, hands: hands};
       } else {
         console.log('Game already exists, please pick a new name.');
@@ -1549,7 +1546,8 @@ var SevenWonders = function() {
     score.style.backgroundSize = 'contain';
     score.style.backgroundRepeat = 'no-repeat';
 
-    document.body.insertBefore(score, document.body.firstChild);
+    var scoreContainer = document.querySelector("#score");
+    scoreContainer.appendChild(score);
   };
   this.doBattle = function() {
     for (var i = 0; i < this.numPlayers; i++) {

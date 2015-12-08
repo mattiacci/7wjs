@@ -5,9 +5,11 @@
 <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
 <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
 <script src="lobby.jsx" type="text/babel"></script>
+<script src="game.jsx" type="text/babel"></script>
+<script src="app.jsx" type="text/babel"></script>
 <script src="SevenWonders.js"></script>
 <style>
-  #game_field {
+  #legacy {
     display: flex;
     flex-direction: row-reverse;
     overflow-x: scroll;
@@ -52,8 +54,9 @@
     position: relative;
   }
 </style>
-<div id="game_room"></div>
-<div id="game_field"></div>
+<div id="app"></div>
+<div id="score"></div>
+<div id="legacy"></div>
 <script>
   (function() {
     var params = (function() {
@@ -71,13 +74,14 @@
 
     function go() {
       // TODO: Add browserify or similar.
-      if (!window.Lobby) {
+      if (!window.App) {
         return false;
       }
-      window.gameRoom = new GameRoom(document.getElementById('game_room'), document.getElementById('game_field'));
+      window.gameRoom = new GameRoom(document.getElementById('app'), document.getElementById('legacy'));
 
       if (params['name'] && params['game']) {
-        document.querySelector('#game_room input').value = params['name'];
+        // TODO: Handle bookmarking properly.
+        document.querySelector('#app input').value = params['name'];
         var game = document.getElementById('game_' + params['game']);
         if (game == null) {
           return false;

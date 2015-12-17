@@ -1800,8 +1800,97 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     this.field.appendChild(hand);
 
     // payment
-    var eastResources = document.createElement('div');
-    var content = 'Available resources for purchase from eastern neighbour: ';
+    function makeSimple(context, name, text) {
+  	  var label = document.createElement('label');
+      label.style.display = 'block';
+      	
+    	var input = document.createElement('input');
+    	input.type = 'checkbox'
+    	input.name = name;
+      input.onclick = function() {
+      	if (input.checked) {
+        	context.collection[context.index] = text;
+        } else {
+        	context.collection[context.index] = '';
+        }
+        context.output.value = context.collection.filter(function(r) {
+        	return r != '';
+        }).join(' ');
+      };
+
+    	var span = document.createElement('span');
+    	span.innerHTML = text;
+
+    	label.appendChild(input);
+    	label.appendChild(span);
+      
+      return label;
+    }
+    
+    function makeRadio(context, name, text, selected) {
+    	var label = document.createElement('label');
+      	
+    	var input = document.createElement('input');
+    	input.type = 'radio'
+    	input.name = name;
+      input.onclick = function() {
+      	context.collection[context.index] = (text == 'NONE') ? '' : text;
+        context.output.value = context.collection.filter(function(r) {
+        	return r != '';
+        }).join(' ');
+      };
+      
+      if (selected) {
+      	input.checked = true;
+      }
+
+    	var span = document.createElement('span');
+    	span.innerHTML = text;
+
+    	label.appendChild(input);
+    	label.appendChild(span);
+      
+      return label;
+    }
+    
+    function makeMulti(context, name, multi) {
+    	var group = document.createElement('div');
+      
+      var none = makeRadio(context, name, 'NONE', true);
+      group.appendChild(none);
+      
+      for (var i = 0; i < multi.length; i++) {
+      	var resource = makeRadio(context, name, multi[i]);
+        group.appendChild(resource);
+      }
+      
+      return group;
+    }
+
+	function makePaymentOptions(className, simple, multi) {
+    	var collection = [];
+      var container = document.createElement('div');
+      var output = document.createElement('input');
+      output.disabled = true;
+      output.style.width = '100%';
+      output.className = className;
+      
+      for (var i = 0; i < simple.length; i++) {
+      	var label = makeSimple({collection: collection, index: i, output: output}, 'p' + id + 's' + i, simple[i]);
+      	container.appendChild(label);
+      }
+      
+      for (var j = 0; j < multi.length; j++) {
+      	var group = makeMulti({collection: collection, index: i + j, output: output}, 'p' + id + 'm' + j, multi[j]);
+        container.appendChild(group);
+      }
+      
+      container.appendChild(output);
+      
+      return container;
+    }
+
+
     var simple = [];
     for (resource in Resource) {
       var amount = this.currTurn.playerState.east.resources[Resource[resource]];
@@ -1809,7 +1898,8 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         simple.push(resource);
       }
     }
-    content = content + simple.concat(this.currTurn.playerState.east.multiResources.filter(function(m) {
+
+    var multi = this.currTurn.playerState.east.multiResources.filter(function(m) {
       return m.length == 2;
     }).map(function (m) {
       return m.map(function (r) {
@@ -1818,25 +1908,17 @@ var PlayerInterface = function(field, turnsRef, id, name) {
             return resource;
           }
         }
-      }).join('/');
-    })).join(', ');
-    eastResources.innerHTML = content;
-    eastResources.style.display = 'inline-block';
-    this.field.appendChild(eastResources);
+      });
+    });
 
     var eastPayment = document.createElement('div');
     var eastLabel = document.createElement('div');
     eastLabel.innerHTML = 'Resources to purchase from eastern neighbour (space separated): ';
     eastLabel.style.display = 'inline';
-    var eastAmount = document.createElement('input');
-    eastAmount.className = 'east';
-    eastAmount.type = 'text';
     eastPayment.appendChild(eastLabel);
-    eastPayment.appendChild(eastAmount);
+    eastPayment.appendChild(makePaymentOptions('east', simple, multi));
     this.field.appendChild(eastPayment);
 
-    var westResources = document.createElement('div');
-    var content = 'Available resources for purchase from western neighbour: ';
     var simple = [];
     for (resource in Resource) {
       var amount = this.currTurn.playerState.west.resources[Resource[resource]];
@@ -1844,7 +1926,8 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         simple.push(resource);
       }
     }
-    content = content + simple.concat(this.currTurn.playerState.west.multiResources.filter(function(m) {
+    
+    var multi = this.currTurn.playerState.west.multiResources.filter(function(m) {
       return m.length == 2;
     }).map(function (m) {
       return m.map(function (r) {
@@ -1853,21 +1936,15 @@ var PlayerInterface = function(field, turnsRef, id, name) {
             return resource;
           }
         }
-      }).join('/');
-    })).join(', ');
-    westResources.innerHTML = content;
-    westResources.style.display = 'inline-block';
-    this.field.appendChild(westResources);
+      });
+    });
 
     var westPayment = document.createElement('div');
     var westLabel = document.createElement('div');
     westLabel.innerHTML = 'Resources to purchase from western neighbour (space separated): ';
     westLabel.style.display = 'inline';
-    var westAmount = document.createElement('input');
-    westAmount.className = 'west';
-    westAmount.type = 'text';
     westPayment.appendChild(westLabel);
-    westPayment.appendChild(westAmount);
+    westPayment.appendChild(makePaymentOptions('west', simple, multi));
     this.field.appendChild(westPayment);
 
     var bankPayment = document.createElement('div');

@@ -1876,12 +1876,12 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       output.className = className;
       
       for (var i = 0; i < simple.length; i++) {
-      	var label = makeSimple({collection: collection, index: i, output: output}, 'p' + id + 's' + i, simple[i]);
+      	var label = makeSimple({collection: collection, index: i, output: output}, className.charAt(0) + 'p' + id + 's' + i, simple[i]);
       	container.appendChild(label);
       }
       
       for (var j = 0; j < multi.length; j++) {
-      	var group = makeMulti({collection: collection, index: i + j, output: output}, 'p' + id + 'm' + j, multi[j]);
+      	var group = makeMulti({collection: collection, index: i + j, output: output}, className.charAt(0) + 'p' + id + 'm' + j, multi[j]);
         container.appendChild(group);
       }
       

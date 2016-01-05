@@ -16,23 +16,17 @@ window.App = React.createClass({
       this.setState({games: this.state.games});
     }.bind(this));
   },
-  handleJoinGame: function(context) {
-    gameRoom.joinGame(context.gameName, context.playerName);
+  handleGameChange: function(context) {
     this.setState({
-      currentGameName: context.gameName
-    });
-  },
-  handleQuitGame: function() {
-    this.setState({
-      currentGameName: ''
+      currentGameName: context && context.gameName || ''
     });
   },
   render: function() {
     var view;
     if (this.state.currentGameName) {
-      view = <Game data={this.state.games[this.state.currentGameName]} onQuitGame={this.handleQuitGame} />;
+      view = <Game data={this.state.games[this.state.currentGameName]} onQuitGame={this.handleGameChange} />;
     } else {
-      view = <Lobby games={this.state.games} onJoinGame={this.handleJoinGame} />;
+      view = <Lobby games={this.state.games} onGameChange={this.handleGameChange} />;
     }
     return (
       <div className="App">

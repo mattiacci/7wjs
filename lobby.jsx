@@ -1,7 +1,7 @@
 window.Lobby = React.createClass({
   propTypes: {
     games: React.PropTypes.object,
-    onJoinGame: React.PropTypes.func
+    onGameChange: React.PropTypes.func
   },
   getInitialState: function() {
     return {
@@ -10,13 +10,17 @@ window.Lobby = React.createClass({
       playerName: ''
     };
   },
-  handleCreateGameButtonClick: function(e) {
+  handleCreateButtonClick: function(e) {
     gameRoom.createGame(this.state.newGameName, this.state.numPlayers, this.state.playerName);
+    this.props.onGameChange({
+      gameName: this.state.newGameName
+    });
   },
   handleJoinButtonClick: function(e) {
-    this.props.onJoinGame({
-      gameName: e.target.getAttribute('data-game'),
-      playerName: this.state.playerName
+    var gameName = e.target.getAttribute('data-game');
+    gameRoom.joinGame(gameName, this.state.playerName);
+    this.props.onGameChange({
+      gameName: gameName
     });
   },
   handleNewGameNameChange: function(e) {
@@ -60,7 +64,7 @@ window.Lobby = React.createClass({
         <input type="text" onChange={this.handleNewGameNameChange} />
         <span><br />Number of players: </span>
         <input type="text" onChange={this.handleNumPlayersChange} />
-        <button>Create</button>
+        <button onClick={this.handleCreateButtonClick}>Create</button>
       </div>
     );
   }

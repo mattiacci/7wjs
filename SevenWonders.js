@@ -1693,8 +1693,6 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     }
   };
 
-  this.notify('Good luck, have fun!');
-
   this.play = function(hand, turn) {
     if (this.loaded) {
       this.notify('It is your turn to play in Seven Wonders!');
@@ -1791,19 +1789,27 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     };
     this.field.appendChild(discard);
 
-    // card
+    // cards
     var hand = document.createElement('div');
-    for (var i = 0; i < this.currHand.length; i++) {
-      var card = this.drawCard(this.currHand[i], true);
-      hand.appendChild(card);
-    }
     this.field.appendChild(hand);
+    var selectedCardIndex = this.currHand.indexOf(this.card);
+    var handFactory = React.createFactory(Hand);
+    ReactDOM.render(
+      handFactory({
+        cards: this.currHand,
+        onSelect: function(index) {
+          playerInterface.card = playerInterface.currHand[index];
+        },
+        selected: selectedCardIndex
+      }),
+      hand
+    );
 
     // payment
     function makeSimple(context, name, text) {
   	  var label = document.createElement('label');
       label.style.display = 'block';
-      	
+
     	var input = document.createElement('input');
     	input.type = 'checkbox'
     	input.name = name;
@@ -1823,13 +1829,13 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
     	label.appendChild(input);
     	label.appendChild(span);
-      
+
       return label;
     }
-    
+
     function makeRadio(context, name, text, selected) {
     	var label = document.createElement('label');
-      	
+
     	var input = document.createElement('input');
     	input.type = 'radio'
     	input.name = name;
@@ -1839,7 +1845,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         	return r != '';
         }).join(' ');
       };
-      
+
       if (selected) {
       	input.checked = true;
       }
@@ -1849,21 +1855,21 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
     	label.appendChild(input);
     	label.appendChild(span);
-      
+
       return label;
     }
-    
+
     function makeMulti(context, name, multi) {
     	var group = document.createElement('div');
-      
+
       var none = makeRadio(context, name, 'NONE', true);
       group.appendChild(none);
-      
+
       for (var i = 0; i < multi.length; i++) {
       	var resource = makeRadio(context, name, multi[i]);
         group.appendChild(resource);
       }
-      
+
       return group;
     }
 
@@ -1874,19 +1880,19 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       output.disabled = true;
       output.style.width = '100%';
       output.className = className;
-      
+
       for (var i = 0; i < simple.length; i++) {
       	var label = makeSimple({collection: collection, index: i, output: output}, className.charAt(0) + 'p' + id + 's' + i, simple[i]);
       	container.appendChild(label);
       }
-      
+
       for (var j = 0; j < multi.length; j++) {
       	var group = makeMulti({collection: collection, index: i + j, output: output}, className.charAt(0) + 'p' + id + 'm' + j, multi[j]);
         container.appendChild(group);
       }
-      
+
       container.appendChild(output);
-      
+
       return container;
     }
 
@@ -1926,7 +1932,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         simple.push(resource);
       }
     }
-    
+
     var multi = this.currTurn.playerState.west.multiResources.filter(function(m) {
       return m.length == 2;
     }).map(function (m) {

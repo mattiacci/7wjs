@@ -1,3 +1,19 @@
+(function() {
+
+// TODO: Find a better way to pass in URL state.
+var params = (function() {
+  var result = {};
+  if (window.location.search) {
+      // split up the query string and store in an associative array
+      var params = window.location.search.slice(1).split('&');
+      for (var i = 0; i < params.length; i++) {
+          var tmp = params[i].split('=');
+          result[tmp[0]] = unescape(tmp[1]);
+      }
+  }
+  return result;
+})();
+
 window.Lobby = React.createClass({
   propTypes: {
     games: React.PropTypes.object,
@@ -7,7 +23,7 @@ window.Lobby = React.createClass({
     return {
       newGameName: '',
       numPlayers: '',
-      playerName: ''
+      playerName: params['name'] || ''
     };
   },
   handleCreateButtonClick: function(e) {
@@ -69,3 +85,5 @@ window.Lobby = React.createClass({
     );
   }
 });
+
+})();

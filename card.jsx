@@ -38,7 +38,7 @@ window.Card = function(props) {
       }
       <p>{data.tooltip}</p>
       <div className="image" style={{
-        backgroundImage: 'url("Assets/Age ' + data.age + '/' + data.minPlayers + ' ' + data.name + '.jpg")'
+        backgroundImage: 'url("' + window.ASSET_URL_PREFIX + 'Assets/Age ' + data.age + '/' + data.minPlayers + ' ' + data.name + '.jpg")'
       }}></div>
     </div>
   );

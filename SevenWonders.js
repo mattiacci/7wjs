@@ -1293,7 +1293,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     wonderBoardContainer.className = 'wonder';
     var wonderBoard = document.createElement('div');
     wonderBoard.className = 'board';
-    wonderBoard.style.backgroundImage = 'url(\'Assets/' + this.currTurn.playerState.board.name + ' ' + this.currTurn.playerState.side + '.jpg\')';
+    wonderBoard.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/' + this.currTurn.playerState.board.name + ' ' + this.currTurn.playerState.side + '.jpg\')';
     var start, delta;
     if (this.currTurn.playerState.side == 'A' || this.currTurn.playerState.board.stages.length == 6) {
       start = 37;
@@ -1308,7 +1308,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     for (var i = 0; i < this.currTurn.playerState.stagesBuilt.length; i++) {
       var back = document.createElement('div');
       back.className = 'back';
-      back.style.backgroundImage = 'url(\'Assets/Age ' + this.currTurn.playerState.stagesBuilt[i] + '/Back.jpg\')';
+      back.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/Age ' + this.currTurn.playerState.stagesBuilt[i] + '/Back.jpg\')';
       back.style.left = start + delta * i + 'px';
       wonderBoardContainer.appendChild(back);
     }
@@ -1383,7 +1383,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
         base.style.borderRadius = '12px';
       }
     })(base);
-    img.src = 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
+    img.src = window.ASSET_URL_PREFIX + 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
 
     return base;
   };
@@ -1542,7 +1542,7 @@ var SevenWonders = function() {
     }
     table.appendChild(total);
     score.appendChild(table);
-    score.style.backgroundImage = 'url(\'Assets/Score.jpg\')';
+    score.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/Score.jpg\')';
     score.style.backgroundSize = 'contain';
     score.style.backgroundRepeat = 'no-repeat';
 
@@ -2059,7 +2059,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     wonderBoardContainer.className = 'wonder';
     var wonderBoard = document.createElement('div');
     wonderBoard.className = 'board';
-    wonderBoard.style.backgroundImage = 'url(\'Assets/' + this.currTurn.playerState.board.name + ' ' + this.currTurn.playerState.side + '.jpg\')';
+    wonderBoard.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/' + this.currTurn.playerState.board.name + ' ' + this.currTurn.playerState.side + '.jpg\')';
     var start, delta;
     if (this.currTurn.playerState.side == 'A' || this.currTurn.playerState.board.stages.length == 6) {
       start = 37;
@@ -2074,7 +2074,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     for (var i = 0; i < this.currTurn.playerState.stagesBuilt.length; i++) {
       var back = document.createElement('div');
       back.className = 'back';
-      back.style.backgroundImage = 'url(\'Assets/Age ' + this.currTurn.playerState.stagesBuilt[i] + '/Back.jpg\')';
+      back.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/Age ' + this.currTurn.playerState.stagesBuilt[i] + '/Back.jpg\')';
       back.style.left = start + delta * i + 'px';
       wonderBoardContainer.appendChild(back);
     }
@@ -2161,7 +2161,7 @@ this.drawDone = function() {
         base.style.borderRadius = '12px';
       }
     })(base);
-    img.src = 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
+    img.src = window.ASSET_URL_PREFIX + 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
 
     return base;
   };

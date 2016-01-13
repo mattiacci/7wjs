@@ -1288,32 +1288,18 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     built.appendChild(typeContainer);
     this.field.appendChild(built);
 
-    // Built wonder stages
-    var wonderBoardContainer = document.createElement('div');
-    wonderBoardContainer.className = 'wonder';
     var wonderBoard = document.createElement('div');
-    wonderBoard.className = 'board';
-    wonderBoard.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/' + this.currTurn.playerState.board.name + ' ' + this.currTurn.playerState.side + '.jpg\')';
-    var start, delta;
-    if (this.currTurn.playerState.side == 'A' || this.currTurn.playerState.board.stages.length == 6) {
-      start = 37;
-      delta = 151;
-    } else if (this.currTurn.playerState.board.stages.length == 7) {
-      start = -10;
-      delta = 133;
-    } else {
-      start = 188;
-      delta = 151;
-    }
-    for (var i = 0; i < this.currTurn.playerState.stagesBuilt.length; i++) {
-      var back = document.createElement('div');
-      back.className = 'back';
-      back.style.backgroundImage = 'url(\'' + window.ASSET_URL_PREFIX + 'Assets/Age ' + this.currTurn.playerState.stagesBuilt[i] + '/Back.jpg\')';
-      back.style.left = start + delta * i + 'px';
-      wonderBoardContainer.appendChild(back);
-    }
-    wonderBoardContainer.appendChild(wonderBoard);
-    this.field.appendChild(wonderBoardContainer);
+    this.field.appendChild(wonderBoard);
+    var wonderBoardFactory = React.createFactory(WonderBoard);
+    ReactDOM.render(
+      wonderBoardFactory({
+        built: this.currTurn.playerState.stagesBuilt,
+        name: this.currTurn.playerState.board.name,
+        side: this.currTurn.playerState.side,
+        stageCount: this.currTurn.playerState.board.stages.length
+      }),
+      wonderBoard
+    );
 
     this.field.style.marginBottom = '25px';
     this.field.style.border = '1px solid black';

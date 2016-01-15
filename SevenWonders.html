@@ -10,6 +10,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
 <script src="card.jsx" type="text/babel"></script>
 <script src="hand.jsx" type="text/babel"></script>
 <script src="wonderboard.jsx" type="text/babel"></script>
+<script src="playerfield.jsx" type="text/babel"></script>
 <script src="lobby.jsx" type="text/babel"></script>
 <script src="game.jsx" type="text/babel"></script>
 <script src="app.jsx" type="text/babel"></script>
@@ -37,6 +38,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   .card .image {
     background: center no-repeat;
     background-size: contain;
+    border-radius: 12px; /* used to crop image */
     bottom: 0;
     left: 0;
     position: absolute;

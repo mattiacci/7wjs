@@ -16,15 +16,18 @@ var Science = {
   LITERATURE: 2  // Tablet
 };
 
+// The number assigned to a type is used for ordering (e.g. when displaying all cards).
 var CardType = {
-  COMMERCE: 0, // Yellow
+  RESOURCE: 0, // Brown
   GOODS: 1,    // Grey
-  GUILD: 2,    // Purple
-  MILITARY: 3, // Red
-  RESOURCE: 4, // Brown
-  SCIENCE: 5,  // Green
-  VICTORY: 6,  // Blue
-  WONDER: 7
+  COMMERCE: 2, // Yellow
+  GUILD: 3,    // Purple
+  MILITARY: 4, // Red
+  ACADEMICS: 5,  // Green Sextant
+  ENGINEERING: 6, // Green Gear
+  LITERATURE: 7, // Green Tablet
+  VICTORY: 8,  // Blue
+  WONDER: 9
 };
 
 var TradeCost = {
@@ -211,12 +214,12 @@ var AGE1DECK = [
   new Card('Timber Yard', 1, [1], CardType.RESOURCE, multiResourceReward(Resource.STONE, Resource.WOOD), 2, 'Produces stone or wood.'),
   new Card('Tree Farm', 1, [1], CardType.RESOURCE, multiResourceReward(Resource.WOOD, Resource.CLAY), 6, 'Produces wood or clay.'),
 
-  new Card('Apothecary', 1, [[Resource.CLOTH]], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
-  new Card('Apothecary', 1, [[Resource.CLOTH]], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 5, 'Enhances academics.'),
-  new Card('Scriptorium', 1, [[Resource.PAPER]], CardType.SCIENCE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
-  new Card('Scriptorium', 1, [[Resource.PAPER]], CardType.SCIENCE, scienceReward(Science.LITERATURE), 4, 'Enhances literature.'),
-  new Card('Workshop', 1, [[Resource.GLASS]], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
-  new Card('Workshop', 1, [[Resource.GLASS]], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 7, 'Enhances engineering.'),
+  new Card('Apothecary', 1, [[Resource.CLOTH]], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
+  new Card('Apothecary', 1, [[Resource.CLOTH]], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 5, 'Enhances academics.'),
+  new Card('Scriptorium', 1, [[Resource.PAPER]], CardType.LITERATURE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
+  new Card('Scriptorium', 1, [[Resource.PAPER]], CardType.LITERATURE, scienceReward(Science.LITERATURE), 4, 'Enhances literature.'),
+  new Card('Workshop', 1, [[Resource.GLASS]], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
+  new Card('Workshop', 1, [[Resource.GLASS]], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 7, 'Enhances engineering.'),
 
   new Card('Altar', 1, [], CardType.VICTORY, pointsReward(2, Scoring.VICTORY), 2, 'Yields 2 victory points.'),
   new Card('Altar', 1, [], CardType.VICTORY, pointsReward(2, Scoring.VICTORY), 5, 'Yields 2 victory points.'),
@@ -320,14 +323,14 @@ var AGE2DECK = [
   new Card('Sawmill', 2, [1], CardType.RESOURCE, resourceReward(Resource.WOOD, 2), 2, 'Produces 2 units of wood.'),
   new Card('Sawmill', 2, [1], CardType.RESOURCE, resourceReward(Resource.WOOD, 2), 4, 'Produces 2 units of wood.'),
 
-  new Card('Dispensary', 2, [[Resource.ORE, Resource.ORE, Resource.GLASS], 'Apothecary'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
-  new Card('Dispensary', 2, [[Resource.ORE, Resource.ORE, Resource.GLASS], 'Apothecary'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 4, 'Enhances academics.'),
-  new Card('Laboratory', 2, [[Resource.CLAY, Resource.CLAY, Resource.PAPER], 'Workshop'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
-  new Card('Laboratory', 2, [[Resource.CLAY, Resource.CLAY, Resource.PAPER], 'Workshop'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 5, 'Enhances engineering.'),
-  new Card('Library', 2, [[Resource.STONE, Resource.STONE, Resource.CLOTH], 'Scriptorium'], CardType.SCIENCE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
-  new Card('Library', 2, [[Resource.STONE, Resource.STONE, Resource.CLOTH], 'Scriptorium'], CardType.SCIENCE, scienceReward(Science.LITERATURE), 6, 'Enhances literature.'),
-  new Card('School', 2, [[Resource.WOOD, Resource.PAPER]], CardType.SCIENCE, scienceReward(Science.LITERATURE), 3, 'Enhances literature.'),
-  new Card('School', 2, [[Resource.WOOD, Resource.PAPER]], CardType.SCIENCE, scienceReward(Science.LITERATURE), 7, 'Enhances literature.'),
+  new Card('Dispensary', 2, [[Resource.ORE, Resource.ORE, Resource.GLASS], 'Apothecary'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
+  new Card('Dispensary', 2, [[Resource.ORE, Resource.ORE, Resource.GLASS], 'Apothecary'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 4, 'Enhances academics.'),
+  new Card('Laboratory', 2, [[Resource.CLAY, Resource.CLAY, Resource.PAPER], 'Workshop'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
+  new Card('Laboratory', 2, [[Resource.CLAY, Resource.CLAY, Resource.PAPER], 'Workshop'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 5, 'Enhances engineering.'),
+  new Card('Library', 2, [[Resource.STONE, Resource.STONE, Resource.CLOTH], 'Scriptorium'], CardType.LITERATURE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
+  new Card('Library', 2, [[Resource.STONE, Resource.STONE, Resource.CLOTH], 'Scriptorium'], CardType.LITERATURE, scienceReward(Science.LITERATURE), 6, 'Enhances literature.'),
+  new Card('School', 2, [[Resource.WOOD, Resource.PAPER]], CardType.LITERATURE, scienceReward(Science.LITERATURE), 3, 'Enhances literature.'),
+  new Card('School', 2, [[Resource.WOOD, Resource.PAPER]], CardType.LITERATURE, scienceReward(Science.LITERATURE), 7, 'Enhances literature.'),
 
   new Card('Aquaduct', 2, [[Resource.STONE, Resource.STONE, Resource.STONE], 'Baths'], CardType.VICTORY, pointsReward(5, Scoring.VICTORY), 3, 'Yields 5 victory points.'),
   new Card('Aquaduct', 2, [[Resource.STONE, Resource.STONE, Resource.STONE], 'Baths'], CardType.VICTORY, pointsReward(5, Scoring.VICTORY), 7, 'Yields 5 victory points.'),
@@ -393,16 +396,16 @@ var AGE3DECK = [
   new Card('Siege Workshop', 3, [[Resource.CLAY, Resource.CLAY, Resource.CLAY, Resource.WOOD], 'Laboratory'], CardType.MILITARY, militaryReward(3), 2, 'Provides 3 units of military strength.'),
   new Card('Siege Workshop', 3, [[Resource.CLAY, Resource.CLAY, Resource.CLAY, Resource.WOOD], 'Laboratory'], CardType.MILITARY, militaryReward(3), 5, 'Provides 3 units of military strength.'),
 
-  new Card('Academy', 3, [[Resource.STONE, Resource.STONE, Resource.STONE, Resource.GLASS], 'School'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 3, 'Enhances academics.'),
-  new Card('Academy', 3, [[Resource.STONE, Resource.STONE, Resource.STONE, Resource.GLASS], 'School'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 7, 'Enhances academics.'),
-  new Card('Lodge', 3, [[Resource.CLAY, Resource.CLAY, Resource.PAPER, Resource.CLOTH], 'Dispensary'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
-  new Card('Lodge', 3, [[Resource.CLAY, Resource.CLAY, Resource.PAPER, Resource.CLOTH], 'Dispensary'], CardType.SCIENCE, scienceReward(Science.ACADEMICS), 6, 'Enhances academics.'),
-  new Card('Observatory', 3, [[Resource.ORE, Resource.ORE, Resource.GLASS, Resource.CLOTH], 'Laboratory'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
-  new Card('Observatory', 3, [[Resource.ORE, Resource.ORE, Resource.GLASS, Resource.CLOTH], 'Laboratory'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 7, 'Enhances engineering.'),
-  new Card('Study', 3, [[Resource.WOOD, Resource.PAPER, Resource.CLOTH], 'School'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 3, 'Enhances engineering.'),
-  new Card('Study', 3, [[Resource.WOOD, Resource.PAPER, Resource.CLOTH], 'School'], CardType.SCIENCE, scienceReward(Science.ENGINEERING), 5, 'Enhances engineering.'),
-  new Card('University', 3, [[Resource.WOOD, Resource.WOOD, Resource.PAPER, Resource.GLASS], 'Library'], CardType.SCIENCE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
-  new Card('University', 3, [[Resource.WOOD, Resource.WOOD, Resource.PAPER, Resource.GLASS], 'Library'], CardType.SCIENCE, scienceReward(Science.LITERATURE), 4, 'Enhances literature.'),
+  new Card('Academy', 3, [[Resource.STONE, Resource.STONE, Resource.STONE, Resource.GLASS], 'School'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 3, 'Enhances academics.'),
+  new Card('Academy', 3, [[Resource.STONE, Resource.STONE, Resource.STONE, Resource.GLASS], 'School'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 7, 'Enhances academics.'),
+  new Card('Lodge', 3, [[Resource.CLAY, Resource.CLAY, Resource.PAPER, Resource.CLOTH], 'Dispensary'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 2, 'Enhances academics.'),
+  new Card('Lodge', 3, [[Resource.CLAY, Resource.CLAY, Resource.PAPER, Resource.CLOTH], 'Dispensary'], CardType.ACADEMICS, scienceReward(Science.ACADEMICS), 6, 'Enhances academics.'),
+  new Card('Observatory', 3, [[Resource.ORE, Resource.ORE, Resource.GLASS, Resource.CLOTH], 'Laboratory'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 2, 'Enhances engineering.'),
+  new Card('Observatory', 3, [[Resource.ORE, Resource.ORE, Resource.GLASS, Resource.CLOTH], 'Laboratory'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 7, 'Enhances engineering.'),
+  new Card('Study', 3, [[Resource.WOOD, Resource.PAPER, Resource.CLOTH], 'School'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 3, 'Enhances engineering.'),
+  new Card('Study', 3, [[Resource.WOOD, Resource.PAPER, Resource.CLOTH], 'School'], CardType.ENGINEERING, scienceReward(Science.ENGINEERING), 5, 'Enhances engineering.'),
+  new Card('University', 3, [[Resource.WOOD, Resource.WOOD, Resource.PAPER, Resource.GLASS], 'Library'], CardType.LITERATURE, scienceReward(Science.LITERATURE), 2, 'Enhances literature.'),
+  new Card('University', 3, [[Resource.WOOD, Resource.WOOD, Resource.PAPER, Resource.GLASS], 'Library'], CardType.LITERATURE, scienceReward(Science.LITERATURE), 4, 'Enhances literature.'),
 
   new Card('Gardens', 3, [[Resource.CLAY, Resource.CLAY, Resource.WOOD], 'Statue'], CardType.VICTORY, pointsReward(5, Scoring.VICTORY), 2, 'Yields 5 victory points.'),
   new Card('Gardens', 3, [[Resource.CLAY, Resource.CLAY, Resource.WOOD], 'Statue'], CardType.VICTORY, pointsReward(5, Scoring.VICTORY), 4, 'Yields 5 victory points.'),
@@ -1225,80 +1228,21 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     this.field.style.background = 'rgba(0,0,0,0.2)';
     this.field.style.padding = '15px';
 
-    // Gold
-    var gold = document.createElement('div');
-    gold.style.marginTop = '20px';
-    gold.innerHTML = 'Gold: ' + this.currTurn.playerState.gold;
-    this.field.appendChild(gold);
-
-    // Battle Tokens
-    var battleTokens = document.createElement('div');
-    battleTokens.innerHTML = 'Battle Tokens: ' + this.currTurn.playerState.battleTokens.join(' ');
-    this.field.appendChild(battleTokens);
-    /*
-    // Board resource
-    var board = document.createElement('div');
-    board.innerHTML = this.currTurn.playerState.board.name + ' resource: ' + resourceSymbols[this.currTurn.playerState.board.resource];
-    this.field.appendChild(board);
-
-    // Unbuilt wonders
-    var wonder = document.createElement('div');
-    for (var i = (this.currTurn.playerState.side == 'A' ? this.currTurn.playerState.stagesBuilt.length : 3 + this.currTurn.playerState.stagesBuilt.length); i < (this.currTurn.playerState.side == 'A' ? 3 : this.currTurn.playerState.board.stages.length); i++) {
-      var stage = this.drawCard(this.currTurn.playerState.board.stages[i]);
-      wonder.appendChild(stage);
-    }
-    this.field.appendChild(wonder);
-    */
-
-    // Already built
-    var built = document.createElement('div');
-    var builtLabel = document.createElement('div');
-    builtLabel.innerHTML = 'Built:';
-    built.appendChild(builtLabel);
-    var builtCards = this.currTurn.playerState.built.slice(0).sort(function(card1, card2) {
-      if (card1.type != card2.type) {
-        return card1.type - card2.type;
-      } else if (card1.type == CardType.SCIENCE && card1.tooltip != card2.tooltip) {
-        return card1.tooltip < card2.tooltip ? 1 : -1;
-      }
-      return card2.age - card1.age;
-    });
-    var typeContainer = document.createElement('div');
-    var prevType, marginTop;
-    for (var i = 0; i < builtCards.length; i++) {
-      // Skip wonder stages
-      if (builtCards[i].age > 0) {
-        var card = this.drawCard(builtCards[i]);
-        card.style.marginRight = '-105px';
-        if ((builtCards[i].type != CardType.SCIENCE && builtCards[i].type != prevType) ||
-            (builtCards[i].type == CardType.SCIENCE && builtCards[i].tooltip != prevType)) {
-          prevType = builtCards[i].type != CardType.SCIENCE ? builtCards[i].type : builtCards[i].tooltip;
-          built.appendChild(typeContainer);
-          typeContainer = document.createElement('div');
-          typeContainer.style.display = 'inline-block';
-          typeContainer.style.marginRight = '105px';
-          marginTop = 45;
-        } else {
-          card.style.marginTop = marginTop + 'px';
-          marginTop += 45;
-        }
-        typeContainer.appendChild(card);
-      }
-    }
-    built.appendChild(typeContainer);
-    this.field.appendChild(built);
-
-    var wonderBoard = document.createElement('div');
-    this.field.appendChild(wonderBoard);
-    var wonderBoardFactory = React.createFactory(WonderBoard);
+    var container = document.createElement('div');
+    this.field.appendChild(container);
     ReactDOM.render(
-      wonderBoardFactory({
-        built: this.currTurn.playerState.stagesBuilt,
-        name: this.currTurn.playerState.board.name,
-        side: this.currTurn.playerState.side,
-        stageCount: this.currTurn.playerState.board.stages.length
+      React.createFactory(PlayerField)({
+        battleTokens: this.currTurn.playerState.battleTokens,
+        cards: this.currTurn.playerState.built,
+        gold: this.currTurn.playerState.gold,
+        wonder: {
+          built: this.currTurn.playerState.stagesBuilt,
+          name: this.currTurn.playerState.board.name,
+          side: this.currTurn.playerState.side,
+          stageCount: this.currTurn.playerState.board.stages.length
+        }
       }),
-      wonderBoard
+      container
     );
 
     this.field.style.marginBottom = '25px';
@@ -1312,67 +1256,6 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     this.field.appendChild(this.doneBox);
   };
 
-  var resourceSymbols = ['Clay', 'Stone', 'Wood', 'Ore', 'Glass', 'Cloth', 'Paper'];
-  var backgroundColors = ['rgba(255,255,0,0.5)','rgba(192,192,192,0.5)','rgba(128,0,128,0.5)','rgba(255,0,0,0.5)','rgba(192,128,96,0.5)','rgba(0,128,0,0.5)','rgba(0,0,255,0.5)','rgba(255,255,255,0.5)'];
-
-  this.drawCard = function(card) {
-    var playerInterface = this;
-
-    var base = document.createElement('div');
-    base.className = 'card';
-    base.style.background = backgroundColors[card.type];
-
-    var name = document.createElement('div');
-    name.style.fontSize = 'large';
-    name.style.marginBottom = '10px';
-    name.innerHTML = card.name;
-    base.appendChild(name);
-
-    var cost = document.createElement('div');
-    for (var i = 0; i < card.cost.length; i++) {
-      var option = document.createElement('div');
-      switch (typeof card.cost[i]) {
-        case 'string':
-          option.innerHTML = card.cost[i];
-          break;
-        case 'object':
-          option.innerHTML = card.cost[i].map(function(resource) {
-            return resourceSymbols[resource];
-          }).join(' ');
-          break;
-        case 'number':
-          option.innerHTML = '1 gold';
-          break;
-      }
-      cost.appendChild(option);
-    }
-    base.appendChild(cost);
-
-    var reward = document.createElement('div');
-    reward.style.fontStye = 'italics';
-    reward.style.marginTop = '10px';
-    //reward.style.position = 'absolute';
-    //reward.style.top = '70%';
-    reward.innerHTML = card.tooltip;
-    base.appendChild(reward);
-
-    var img = new Image();
-    img.onload = (function(base) {
-      return function() {
-        base.innerHTML = '';
-        base.style.background = 'url(' + this.src + ')';
-        base.style.backgroundSize = 'contain';
-        base.style.backgroundRepeat = 'no-repeat';
-        base.style.backgroundPosition = 'center';
-        base.style.border = 'none';
-        base.style.padding = 0;
-        base.style.borderRadius = '12px';
-      }
-    })(base);
-    img.src = window.ASSET_URL_PREFIX + 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
-
-    return base;
-  };
 };
 
 var SevenWonders = function() {
@@ -1970,80 +1853,21 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     };
     this.field.appendChild(discard);
 
-    // Gold
-    var gold = document.createElement('div');
-    gold.style.marginTop = '20px';
-    gold.innerHTML = 'Gold: ' + this.currTurn.playerState.gold;
-    this.field.appendChild(gold);
-    // Battle Tokens
-    var battleTokens = document.createElement('div');
-    battleTokens.innerHTML = 'Battle Tokens: ' + this.currTurn.playerState.battleTokens.join(' ');
-    this.field.appendChild(battleTokens);
-
-    /*
-    // Board resource
-    var board = document.createElement('div');
-    board.innerHTML = this.currTurn.playerState.board.name + ' resource: ' + resourceSymbols[this.currTurn.playerState.board.resource];
-    this.field.appendChild(board);
-
-    // Unbuilt wonders
-    var wonder = document.createElement('div');
-    for (var i = (this.currTurn.playerState.side == 'A' ? this.currTurn.playerState.stagesBuilt.length : 3 + this.currTurn.playerState.stagesBuilt.length); i < (this.currTurn.playerState.side == 'A' ? 3 : this.currTurn.playerState.board.stages.length); i++) {
-      var stage = this.drawCard(this.currTurn.playerState.board.stages[i], false);
-      wonder.appendChild(stage);
-    }
-    this.field.appendChild(wonder);
-    */
-
-    // Already built
-    var built = document.createElement('div');
-    var builtLabel = document.createElement('div');
-    builtLabel.innerHTML = 'Built:';
-    built.appendChild(builtLabel);
-    var builtCards = this.currTurn.playerState.built.slice(0).sort(function(card1, card2) {
-      if (card1.type != card2.type) {
-        return card1.type - card2.type;
-      } else if (card1.type == CardType.SCIENCE && card1.tooltip != card2.tooltip) {
-        return card1.tooltip < card2.tooltip ? 1 : -1;
-      }
-      return card2.age - card1.age;
-    });
-    var typeContainer = document.createElement('div');
-    var prevType, marginTop;
-    for (var i = 0; i < builtCards.length; i++) {
-      // Skip wonder stages
-      if (builtCards[i].age > 0) {
-        var card = this.drawCard(builtCards[i], false);
-        card.style.marginRight = '-105px';
-        if ((builtCards[i].type != CardType.SCIENCE && builtCards[i].type != prevType) ||
-            (builtCards[i].type == CardType.SCIENCE && builtCards[i].tooltip != prevType)) {
-          prevType = builtCards[i].type != CardType.SCIENCE ? builtCards[i].type : builtCards[i].tooltip;
-          built.appendChild(typeContainer);
-          typeContainer = document.createElement('div');
-          typeContainer.style.display = 'inline-block';
-          typeContainer.style.marginRight = '105px';
-          marginTop = 45;
-        } else {
-          card.style.marginTop = marginTop + 'px';
-          marginTop += 45;
-        }
-        typeContainer.appendChild(card);
-      }
-    }
-    built.appendChild(typeContainer);
-    this.field.appendChild(built);
-
-    var wonderBoard = document.createElement('div');
-    this.field.appendChild(wonderBoard);
-    var wonderBoardFactory = React.createFactory(WonderBoard);
+    var container = document.createElement('div');
+    this.field.appendChild(container);
     ReactDOM.render(
-      wonderBoardFactory({
-        built: this.currTurn.playerState.stagesBuilt,
-        name: this.currTurn.playerState.board.name,
-        side: this.currTurn.playerState.side,
-        stageCount: this.currTurn.playerState.board.stages.length
+      React.createFactory(PlayerField)({
+        battleTokens: this.currTurn.playerState.battleTokens,
+        cards: this.currTurn.playerState.built,
+        gold: this.currTurn.playerState.gold,
+        wonder: {
+          built: this.currTurn.playerState.stagesBuilt,
+          name: this.currTurn.playerState.board.name,
+          side: this.currTurn.playerState.side,
+          stageCount: this.currTurn.playerState.board.stages.length
+        }
       }),
-      wonderBoard
+      container
     );
 
     this.field.style.marginBottom = '25px';
@@ -2059,77 +1883,6 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     this.field.appendChild(this.doneBox);
   };
 
-  var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
-  var backgroundColors = ['rgba(255,255,0,0.5)','rgba(192,192,192,0.5)','rgba(128,0,128,0.5)','rgba(255,0,0,0.5)','rgba(192,128,96,0.5)','rgba(0,128,0,0.5)','rgba(0,0,255,0.5)','rgba(255,255,255,0.5)'];
-
-  this.drawCard = function(card, hasHandler) {
-    var playerInterface = this;
-
-    var base = document.createElement('div');
-    base.className = 'card';
-    base.style.background = backgroundColors[card.type];
-
-    var name = document.createElement('div');
-    name.style.fontSize = 'large';
-    name.style.marginBottom = '10px';
-    name.innerHTML = card.name;
-    base.appendChild(name);
-
-    var cost = document.createElement('div');
-    for (var i = 0; i < card.cost.length; i++) {
-      var option = document.createElement('div');
-      switch (typeof card.cost[i]) {
-        case 'string':
-          option.innerHTML = card.cost[i];
-          break;
-        case 'object':
-          option.innerHTML = card.cost[i].map(function(resource) {
-            return resourceSymbols[resource];
-          }).join(' ');
-          break;
-        case 'number':
-          option.innerHTML = '1 gold';
-          break;
-      }
-      cost.appendChild(option);
-    }
-    base.appendChild(cost);
-
-    var reward = document.createElement('div');
-    reward.style.fontStye = 'italics';
-    reward.style.marginTop = '10px';
-    //reward.style.position = 'absolute';
-    //reward.style.top = '70%';
-    reward.innerHTML = card.tooltip;
-    base.appendChild(reward);
-
-    if (hasHandler) {
-      base.onclick = function() {
-        playerInterface.card = card;
-        Array.prototype.slice.call(base.parentNode.querySelectorAll('.card')).forEach(function (element) {
-          element.className = 'card';
-        });
-        base.className = 'card selected';
-      };
-    }
-
-    var img = new Image();
-    img.onload = (function(base) {
-      return function() {
-        base.innerHTML = '';
-        base.style.background = 'url(' + this.src + ')';
-        base.style.backgroundSize = 'contain';
-        base.style.backgroundRepeat = 'no-repeat';
-        base.style.backgroundPosition = 'center';
-        base.style.border = 'none';
-        base.style.padding = 0;
-        base.style.borderRadius = '12px';
-      }
-    })(base);
-    img.src = window.ASSET_URL_PREFIX + 'Assets/Age ' + card.age + '/' + card.minPlayers + ' ' + card.name + '.jpg';
-
-    return base;
-  };
 };
 
 this.GameRoom = GameRoom;

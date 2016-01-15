@@ -1221,8 +1221,8 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   });
 
   this.draw = function() {
-    this.field.innerHTML = this.name + '<br>';
-    this.field.style.background = 'rgba(0,0,0,0.3)';
+    this.field.innerHTML = '<h3>' + this.name + '</h3>';
+    this.field.style.background = 'rgba(0,0,0,0.2)';
     this.field.style.padding = '15px';
 
     // Gold
@@ -1743,37 +1743,8 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.draw = function() {
     console.log('draw start');
-    this.field.innerHTML = this.name + '<br>';
+    this.field.innerHTML = '<h3>' + this.name + '</h3>';
     this.field.style.padding = '15px';
-
-    // action
-    var label = document.createElement('div');
-    playerInterface.action = Action.BUILD;
-    label.innerHTML = 'Action: BUILD';
-    label.style.marginTop = '20px';
-    this.field.appendChild(label);
-
-    var build = document.createElement('button');
-    build.innerHTML = 'Build';
-    build.onclick = function() {
-      playerInterface.action = Action.BUILD;
-      label.innerHTML = 'Action: BUILD';
-    };
-    this.field.appendChild(build);
-    var wonder = document.createElement('button');
-    wonder.innerHTML = 'Build Wonder';
-    wonder.onclick = function() {
-      playerInterface.action = Action.BUILD_WONDER;
-      label.innerHTML = 'Action: WONDER';
-    };
-    this.field.appendChild(wonder);
-    var discard = document.createElement('button');
-    discard.innerHTML = 'Discard';
-    discard.onclick = function() {
-      playerInterface.action = Action.DISCARD;
-      label.innerHTML = 'Action: DISCARD';
-    };
-    this.field.appendChild(discard);
 
     // cards
     var hand = document.createElement('div');
@@ -1859,12 +1830,13 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       return group;
     }
 
-	function makePaymentOptions(className, simple, multi) {
+    function makePaymentOptions(className, simple, multi) {
     	var collection = [];
       var container = document.createElement('div');
       var output = document.createElement('input');
       output.disabled = true;
       output.style.width = '100%';
+      output.style.display = 'none';
       output.className = className;
 
       for (var i = 0; i < simple.length; i++) {
@@ -1904,9 +1876,9 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     });
 
     var eastPayment = document.createElement('div');
+    eastPayment.style.marginTop = '.5em';
     var eastLabel = document.createElement('div');
-    eastLabel.innerHTML = 'Resources to purchase from eastern neighbour (space separated): ';
-    eastLabel.style.display = 'inline';
+    eastLabel.innerHTML = 'Resources to purchase from eastern neighbor: ';
     eastPayment.appendChild(eastLabel);
     eastPayment.appendChild(makePaymentOptions('east', simple, multi));
     this.field.appendChild(eastPayment);
@@ -1932,14 +1904,16 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     });
 
     var westPayment = document.createElement('div');
+    westPayment.style.marginTop = '.5em';
     var westLabel = document.createElement('div');
-    westLabel.innerHTML = 'Resources to purchase from western neighbour (space separated): ';
-    westLabel.style.display = 'inline';
+    westLabel.innerHTML = 'Resources to purchase from western neighbor: ';
     westPayment.appendChild(westLabel);
     westPayment.appendChild(makePaymentOptions('west', simple, multi));
     this.field.appendChild(westPayment);
 
     var bankPayment = document.createElement('div');
+    bankPayment.style.marginTop = '.5em';
+    bankPayment.style.marginBottom = '.5em';
     var payBank = document.createElement('input');
     payBank.type = 'checkbox';
     payBank.className = 'bank';
@@ -1950,11 +1924,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     bankPayment.appendChild(bankLabel);
     this.field.appendChild(bankPayment);
 
-
-    // Go button
-    var go = document.createElement('button');
-    go.innerHTML = 'Go';
-    go.onclick = function() {
+    var go = function() {
       var east = playerInterface.field.querySelector('.east').value.split(' ').map(function(resource) {
         return resourceSymbols.indexOf(resource.toLowerCase());
       }).filter(function(resource) {
@@ -1974,8 +1944,31 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         console.log('WARNING: no turnsRef');
         playerInterface.currTurn.play(playerInterface.action, playerInterface.card, payment);
       }
-    }
-    this.field.appendChild(go);
+    };
+
+    var build = document.createElement('button');
+    build.style.marginRight = '.5em';
+    build.innerHTML = 'Build';
+    build.onclick = function() {
+      playerInterface.action = Action.BUILD;
+      go();
+    };
+    this.field.appendChild(build);
+    var wonder = document.createElement('button');
+    wonder.style.marginRight = '.5em';
+    wonder.innerHTML = 'Build Wonder';
+    wonder.onclick = function() {
+      playerInterface.action = Action.BUILD_WONDER;
+      go();
+    };
+    this.field.appendChild(wonder);
+    var discard = document.createElement('button');
+    discard.innerHTML = 'Discard';
+    discard.onclick = function() {
+      playerInterface.action = Action.DISCARD;
+      go();
+    };
+    this.field.appendChild(discard);
 
     // Gold
     var gold = document.createElement('div');
@@ -2059,12 +2052,12 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     console.log('draw done');
   };
 
-this.drawDone = function() {
-  this.field.style.position = 'relative';
-  this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
-  this.doneBox.style.fontSize = this.field.offsetWidth / 20 + 'px';
-  this.field.appendChild(this.doneBox);
-};
+  this.drawDone = function() {
+    this.field.style.position = 'relative';
+    this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
+    this.doneBox.style.fontSize = this.field.offsetWidth / 20 + 'px';
+    this.field.appendChild(this.doneBox);
+  };
 
   var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
   var backgroundColors = ['rgba(255,255,0,0.5)','rgba(192,192,192,0.5)','rgba(128,0,128,0.5)','rgba(255,0,0,0.5)','rgba(192,128,96,0.5)','rgba(0,128,0,0.5)','rgba(0,0,255,0.5)','rgba(255,255,255,0.5)'];

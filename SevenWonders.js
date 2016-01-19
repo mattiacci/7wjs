@@ -1808,7 +1808,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     this.field.appendChild(bankPayment);
 
     var go = function() {
-      var resourceSymbols = ['Clay', 'Stone', 'Wood', 'Ore', 'Glass', 'Cloth', 'Paper'];
+      var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
       var east = playerInterface.field.querySelector('.east').value.split(' ').map(function(resource) {
         return resourceSymbols.indexOf(resource.toLowerCase());
       }).filter(function(resource) {

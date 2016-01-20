@@ -1109,8 +1109,9 @@ var GameRoom = function(appContainer, gameField) {
   this.getBoards = function(players) {
     var boards = Array.prototype.slice.call(WONDERS);
     var output = [];
+    var side = Math.random() < 0.5 ? 'A' : 'B';
     for (var i = 0; i < players; i++) {
-      output.push({name: boards.splice(Math.floor(Math.random() * boards.length), 1)[0].name, side: Math.random() < 0.5 ? 'A' : 'B'});
+      output.push({name: boards.splice(Math.floor(Math.random() * boards.length), 1)[0].name, side: side});
     }
     return output;
   };

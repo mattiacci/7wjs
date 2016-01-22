@@ -689,6 +689,192 @@ var fulfillWithSimpleResources = function(needed, player) {
   }
 };
 
+var noValidPlays = function(player, game, hand, free) {
+  return  validPlays(player, game, hand, free).length == 0;
+};
+
+var validPlays = function(player, game, hand, free) {
+  var plays = [];
+
+  // Check if player can build wonder  
+  var stage = getNextStage(player);
+  if (!!stage && !free && canPlay(player, stage, false)) {
+    plays.push(stage);
+  }
+
+  // Check if player can play any card in hand
+  for (var i = 0; i < hand.length; i++) {
+    if (canPlay(player, hand[i], free || player.canBuildForFree[game.age])) {
+      plays.push(hand[i]);
+    }
+  }
+
+  return plays;
+};
+
+var canPlay = function(player, card, free) {
+  // check duplicates
+  if (player.built.some(function(built) {
+    return built.name == card.name;
+  })) {
+    return false;
+  }
+
+  if (free || card.cost.length == 0) {
+    return true;
+  }
+
+  for (var i = card.cost.length - 1, cost; cost = card.cost[i]; i--) {
+    switch (typeof cost) {
+      case 'string':
+        // Search for already built card
+        if (player.built.some(function(built) {
+          return built.name == cost;
+        })) {
+          return true;
+        }
+        break;
+      case 'number':
+        if (player.gold >= cost) {
+          return true;
+        }
+        break;
+      case 'object':
+        var needed = cost.slice(0);
+        fulfillWithSimpleResources(needed, player);
+        if (needed.length == 0) {
+          // fulfilled by simple resources
+          return true;
+        }
+
+        if (canGenerate(player.multiResources.slice(0), needed)) {
+          // fulfilled by generators
+          return true;
+        }
+
+        var resources = [[], [], []];
+        for (resource in player.east.resources) {
+          resource = parseInt(resource);
+          var amount = player.east.resources[resource];
+          if (amount == 0) {
+            continue;
+          }
+          var costOfResource = player.tradeCost[resourceType(resource, true)];
+          for (var j = 0; j < amount; j++) {
+            resources[costOfResource].push(resource);
+          }
+        }
+        for (resource in player.west.resources) {
+          resource = parseInt(resource);
+          var amount = player.west.resources[resource];
+          if (amount == 0) {
+            continue;
+          }
+          var costOfResource = player.tradeCost[resourceType(resource, false)];
+          for (var j = 0; j < amount; j++) {
+            resources[costOfResource].push(resource);
+          }
+        }
+
+        var generators = [player.multiResources.slice(0), [], []];
+        for (var j = 0; j < player.east.multiResources.length; j++) {
+          if (player.east.multiResources[j].length > 2) {
+            // Generators that produces more than 2 resources are not tradable.
+            continue;
+          }
+          var costOfResource = player.tradeCost[resourceType(player.east.multiResources[j][0], true)];
+          generators[costOfResource].push(player.east.multiResources[j].slice(0));
+        }
+        for (var j = 0; j < player.west.multiResources.length; j++) {
+          if (player.west.multiResources[j].length > 2) {
+            // Generators that produces more than 2 resources are not tradable.
+            continue;
+          }
+          var costOfResource = player.tradeCost[resourceType(player.west.multiResources[j][0], false)];
+          generators[costOfResource].push(player.west.multiResources[j].slice(0));
+        }
+
+        if (canGenerateOrPay(needed.slice(0), player.gold, resources, generators)) {
+          return true;
+        }
+        break;
+    }  
+  }
+  return false;
+};
+
+var canGenerate = function(resources, needed) {
+  if (needed.length == 0) {
+    return true;
+  }
+  for (var i = 0, multiResource; multiResource = resources[i]; i++) {
+    var index = multiResource.indexOf(needed[0]);
+    if (index != -1) {
+      var resourcesRemaining = resources.slice(0);
+      resourcesRemaining.splice(i, 1);
+      var remainingNeeded = needed.slice(0);
+      remainingNeeded.splice(0, 1);
+      var possible = canGenerate(resourcesRemaining, remainingNeeded);
+      if (possible) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+var canGenerateOrPay = function(needed, gold, resourceList, generatorList) {
+  if (needed.length == 0) {
+    return true;
+  }
+  for (var i = 0; i < 3 && i <= gold; i++) {
+    var index = resourceList[i].indexOf(needed[0]);
+    if (index != -1) {
+      var newResourceList = resourceList.map(function(resources) {
+        return resources.slice(0);
+      });
+      var newGeneratorList = generatorList.map(function(generators) {
+        return generators.map(function(generator) {
+          return generator.slice(0);
+        });
+      });
+      
+      newResourceList[i].splice(index, 1);
+      var remainingNeeded = needed.slice(0);
+      remainingNeeded.splice(0, 1);
+      var possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
+      if (possible) {
+        return true;
+      }
+    }
+    
+    // Try generators
+    var generators = generatorList[i];
+    for (var j = 0; j < generators.length; j++) {
+      var index = generators[j].indexOf(needed[0]);
+      if (index != -1) {
+        var newResourceList = resourceList.map(function(resources) {
+          return resources.slice(0);
+        });
+        var newGeneratorList = generatorList.map(function(generators) {
+          return generators.map(function(generator) {
+            return generator.slice(0);
+          });
+        });
+
+        newGeneratorList[i].splice(j, 1);
+        var remainingNeeded = needed.slice(0);
+        remainingNeeded.splice(0, 1);
+        var possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
+        if (possible) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
 var verify = function(player, card, payment) {
   if (card.cost.length == 0) {
     // Must not pay if it is a free building.
@@ -876,6 +1062,7 @@ var Payment = function(east, west, bank) {
 
 var Turn = function(player, game, hands, index, free) {
   this.playerState = player;
+  this.free = free;
   var played = false;
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
@@ -938,6 +1125,14 @@ var Turn = function(player, game, hands, index, free) {
       // reward at end of round
       game.endOfRoundRewards.push(executeReward(stage.rewards, player));
     } else if (action == Action.DISCARD) {
+      if (game.wreckANation) {
+        if (noValidPlays(player, game, hands[index], free)) {
+          console.log('Discard ok. No valid plays.', player, hands[index]);
+        } else {
+          console.log('ERROR: For wreck-a-nation variant games, discarding is only allowed when there are no other valid plays.');
+          return false;
+        }
+      }
       game.discarded.push(card);
       player.gold += 3;
     } else {
@@ -1074,7 +1269,7 @@ var GameRoom = function(appContainer, gameField) {
           self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
         }
 
-        self.currGame = new SevenWonders(interfaces, boards, hands);
+        self.currGame = new SevenWonders(interfaces, boards, hands, snapshot.name().indexOf('wreck') == 0);
       }
     });
   };
@@ -1097,7 +1292,7 @@ var GameRoom = function(appContainer, gameField) {
           var remotePlayerInterface = new RemotePlayer(remotePlayerField, turnsRef, i, 'Open slot');
           interfaces.push(remotePlayerInterface);
         }
-        self.currGame = new SevenWonders(interfaces, boards, hands);
+        self.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') == 0);
         return {numPlayers: numPlayers, playersJoined: 1, players: [name], boards: boards, hands: hands};
       } else {
         console.log('Game already exists, please pick a new name.');
@@ -1261,9 +1456,10 @@ var RemotePlayer = function(field, turnsRef, id, name) {
 
 var SevenWonders = function() {
 
-  this.init = function(interfaces, boards, hands) {
+  this.init = function(interfaces, boards, hands, wreck) {
     this.numPlayers = interfaces.length;
     this.playerInterfaces = interfaces.slice(0);
+    this.wreckANation = !!wreck;
 
     // Set up players
     var len = this.numPlayers;
@@ -1633,6 +1829,9 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     // cards
     var hand = document.createElement('div');
     this.field.appendChild(hand);
+    this.currHand.forEach(function(card) {
+      card.playable = canPlay(this.currTurn.playerState, card, this.currTurn.free);
+    }, this);
     var selectedCardIndex = this.currHand.indexOf(this.card);
     var handFactory = React.createFactory(Hand);
     ReactDOM.render(

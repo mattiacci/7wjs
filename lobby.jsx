@@ -23,7 +23,7 @@ window.Lobby = React.createClass({
     return {
       newGameName: '',
       numPlayers: '',
-      playerName: params['name'] || ''
+      playerName: params['name'] || window.localStorage.getItem('name') || ''
     };
   },
   handleCreateButtonClick: function(e) {
@@ -34,6 +34,7 @@ window.Lobby = React.createClass({
   },
   handleJoinButtonClick: function(e) {
     var gameName = e.target.getAttribute('data-game');
+    window.localStorage.setItem('name', this.state.playerName);
     gameRoom.joinGame(gameName, this.state.playerName);
     this.props.onGameChange({
       gameName: gameName

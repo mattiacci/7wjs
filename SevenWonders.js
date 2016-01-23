@@ -986,8 +986,10 @@ var verify = function(player, card, payment) {
         }
 
       case 'number':
-        // pay bank
-        if (player.gold >= cost && payment.bank == cost) {
+        if (payment.east.length != 0 || payment.west.length != 0) {
+          console.log('ERROR: attempting to pay neighbors unnecessarily');
+          return false;
+        } else if (player.gold >= cost && payment.bank == cost) {
           console.log('gold ok');
           return true;
         } else if (player.gold < cost) {

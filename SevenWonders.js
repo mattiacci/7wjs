@@ -1065,6 +1065,7 @@ var Payment = function(east, west, bank) {
 var Turn = function(player, game, hands, index, free) {
   this.playerState = player;
   this.free = free;
+  this.age = game.age;
   var played = false;
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
@@ -1832,7 +1833,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     var hand = document.createElement('div');
     this.field.appendChild(hand);
     this.currHand.forEach(function(card) {
-      card.playable = canPlay(this.currTurn.playerState, card, this.currTurn.free);
+      card.playable = canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
     }, this);
     var selectedCardIndex = this.currHand.indexOf(this.card);
     var handFactory = React.createFactory(Hand);

@@ -111,7 +111,7 @@ var Player = function(board, side, playerInterface) {
   this.canDoubleBuild = false;
   this.playDiscardedNow = false;
   this.canBuildForFree = [false, false, false];
-  this.victoryPoints = {}
+  this.victoryPoints = [];
   this.victoryPoints[Scoring.MILITARY] = 0;
   this.victoryPoints[Scoring.GOLD] = 0;
   this.victoryPoints[Scoring.WONDER] = 0;
@@ -119,6 +119,8 @@ var Player = function(board, side, playerInterface) {
   this.victoryPoints[Scoring.COMMERCE] = 0;
   this.victoryPoints[Scoring.GUILD] = 0;
   this.victoryPoints[Scoring.SCIENCE] = 0;
+  this.currentScore = [];
+  this.scoreTotal = 0;
 
   this.resources[this.board.resource]++;
 
@@ -270,8 +272,7 @@ var endGameReward = function(pointType, types, self, neighbours, victory) {
       points += (countCards(player.east, types) * victory);
       points += (countCards(player.west, types) * victory);
     }
-    player.victoryPoints[pointType] += points;
-    return points;
+    return {type: pointType, points: points};
   }
 };
 
@@ -358,7 +359,7 @@ var strategistReward = function() {
       points += player.west.battleTokens.filter(function(token) {
         return token == -1;
       }).length;
-      player.victoryPoints[Scoring.GUILD] += points;
+      return {type: Scoring.GUILD, points: points};
     });
   };
 };
@@ -449,6 +450,7 @@ var freeBuildReward = function() {
   };
 };
 
+// TODO: Refactor this to be simpler since we can calculate current score now.
 var guildCopyReward = function() {
   return function(player) {
     player.endGameRewards.push(function(player) {
@@ -589,7 +591,7 @@ var clonePlayers = function(players) {
     clone.resources[Resource.PAPER] = player.resources[Resource.PAPER];
 
     clone.gold = player.gold;
-    clone.victoryPoints = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}; // not cloned
+    clone.victoryPoints = [0, 0, 0, 0, 0, 0, 0]; // not cloned
     clone.military = player.military;
     clone.battleTokens = Array.prototype.slice.call(player.battleTokens);
     clone.built = Array.prototype.slice.call(player.built);
@@ -1423,7 +1425,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   });
 
   this.draw = function() {
-    this.field.innerHTML = '<h3>' + this.name + '</h3>';
+    this.field.innerHTML = '<h3>' + this.name + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
     this.field.style.background = 'rgba(0,0,0,0.2)';
     this.field.style.padding = '15px';
 
@@ -1544,6 +1546,7 @@ var SevenWonders = function() {
   this.playRound = function() {
     console.log('playRound');
     console.log(this.hands, this.age, this.numPlayers);
+    this.updateCurrentScores();
     for (var i = 0; i < this.numPlayers; i++) {
       console.log(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
       this.playerInterfaces[i].play(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
@@ -1554,23 +1557,38 @@ var SevenWonders = function() {
     this.playRound();
   };
 
-  this.endGame = function() {
+  this.updateCurrentScores = function() {
     for (var i = 0; i < this.numPlayers; i++) {
-      // player end game functions
+      this.players[i].currentScore = this.players[i].victoryPoints.slice(0);
       for (var j = 0, reward; reward = this.players[i].endGameRewards[j]; j++) {
-        reward(this.players[i]);
+        var score = reward(this.players[i]);
+        this.players[i].currentScore[score.type] += score.points;
       }
 
       // combat
-      this.players[i].victoryPoints[Scoring.MILITARY] = this.players[i].battleTokens.reduce(function(a, b) {
+      this.players[i].currentScore[Scoring.MILITARY] = this.players[i].battleTokens.reduce(function(a, b) {
         return a + b;
       }, 0);
 
       // gold
-      this.players[i].victoryPoints[Scoring.GOLD] = Math.floor(this.players[i].gold / 3);
+      this.players[i].currentScore[Scoring.GOLD] = Math.floor(this.players[i].gold / 3);
 
       // player sciences and bonus sciences
-      this.players[i].victoryPoints[Scoring.SCIENCE] = calcScienceScore(this.players[i]);
+      this.players[i].currentScore[Scoring.SCIENCE] = calcScienceScore(this.players[i]);
+
+      var total = 0;
+      for (prop in Scoring) {
+        total += this.players[i].currentScore[Scoring[prop]];
+      }
+      this.players[i].scoreTotal = total;
+    }
+  }
+
+  this.endGame = function() {
+    this.updateCurrentScores();
+
+    for (var i = 0; i < this.numPlayers; i++) {
+      this.players[i].victoryPoints = this.players[i].currentScore.slice(0);
 
       console.log(this.players[i].victoryPoints);
 
@@ -1581,14 +1599,12 @@ var SevenWonders = function() {
     score.style.padding = '10px 0 10px 55px';
     var table = document.createElement('table');
     var row = document.createElement('tr');
-    var totals = [];
     for (var i = 0; i < this.numPlayers; i++) {
       var cell = document.createElement('td');
       cell.innerHTML = this.playerInterfaces[i].name.substr(0, 2);
       cell.style.maxWidth = '30px';
       cell.style.width = '30px';
       row.appendChild(cell);
-      totals[i] = 0;
     }
     table.appendChild(row);
     for (prop in Scoring) {
@@ -1597,7 +1613,6 @@ var SevenWonders = function() {
         var cell = document.createElement('td');
         var val = this.players[i].victoryPoints[Scoring[prop]];
         cell.innerHTML = val;
-        totals[i] += val;
         row.appendChild(cell);
       }
       table.appendChild(row);
@@ -1606,7 +1621,7 @@ var SevenWonders = function() {
     var total = document.createElement('tr');
     for (var i = 0; i < this.numPlayers; i++) {
       var cell = document.createElement('td');
-      cell.innerHTML = totals[i];
+      cell.innerHTML = this.players[i].scoreTotal;
       total.appendChild(cell);
     }
     table.appendChild(total);
@@ -1826,7 +1841,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.draw = function() {
     console.log('draw start');
-    this.field.innerHTML = '<h3>' + this.name + '</h3>';
+    this.field.innerHTML = '<h3>' + this.name + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
     this.field.style.padding = '15px';
 
     // cards

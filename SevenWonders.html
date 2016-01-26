@@ -31,6 +31,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     margin: 5px 2px;
     padding: 6px;
     position: relative;
+    transition: .2s all;
     vertical-align: text-top;
     white-space: normal;
     width: 128px;
@@ -47,7 +48,11 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   }
   .card.selected .image {
     border-radius: 12px;
-    box-shadow: 0 0 0px 2px red;
+    box-shadow: 0 0 0px 3px red;
+  }
+  .card.unplayable:not(:hover) {
+    -webkit-filter: grayscale(50%) opacity(60%);
+    filter: grayscale(50%) opacity(60%);
   }
   .board {
     background-size: contain;

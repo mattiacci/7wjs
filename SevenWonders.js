@@ -1848,7 +1848,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     var hand = document.createElement('div');
     this.field.appendChild(hand);
     this.currHand.forEach(function(card) {
-      card.playable = canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+      card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
     }, this);
     var selectedCardIndex = this.currHand.indexOf(this.card);
     var handFactory = React.createFactory(Hand);

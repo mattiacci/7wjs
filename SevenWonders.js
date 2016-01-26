@@ -1425,7 +1425,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   });
 
   this.draw = function() {
-    this.field.innerHTML = '<h3>' + this.name + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
+    this.field.innerHTML = '<h3>' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
     this.field.style.background = 'rgba(0,0,0,0.2)';
     this.field.style.padding = '15px';
 
@@ -1841,7 +1841,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.draw = function() {
     console.log('draw start');
-    this.field.innerHTML = '<h3>' + this.name + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
+    this.field.innerHTML = '<h3>' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
     this.field.style.padding = '15px';
 
     // cards

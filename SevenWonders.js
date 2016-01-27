@@ -463,7 +463,7 @@ var guildCopyReward = function() {
       console.log('available guilds', availableGuilds);
 
       if (availableGuilds.length == 0) {
-        return;
+        return {type: Scoring.GUILD, points: 0};
       }
 
       // Count score for guilds using cloned player state

@@ -479,7 +479,7 @@ var guildCopyReward = function() {
         var points = 0;
         currGuild.rewards(clonedPlayers[1]);
         if (clonedPlayers[1].endGameRewards.length > 0) {
-          points += clonedPlayers[1].endGameRewards[0](clonedPlayers[1]);
+          points += clonedPlayers[1].endGameRewards[0](clonedPlayers[1]).points;
         }
 
         // Calculate science reward
@@ -497,7 +497,7 @@ var guildCopyReward = function() {
         }
       }
       console.log('best reward', bestReward, bestGuild);
-      bestReward(player);
+      return bestReward(player);
       console.log('after', player.victoryPoints);
     });
   };

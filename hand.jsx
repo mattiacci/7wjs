@@ -18,7 +18,7 @@ window.Hand = React.createClass({
     var cards = this.props.cards.map(function(card, i) {
       return (
         <div data-index={i} key={i} style={{display: 'inline-block'}} onClick={this.handleCardClick}>
-          <Card data={card} selected={i == this.state.selected} unplayable={card.unplayable} />
+          <Card data={card} selected={i == this.state.selected} unplayable={card.unplayable} free={card.free}/>
         </div>
       );
     }, this);

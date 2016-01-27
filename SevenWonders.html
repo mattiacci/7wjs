@@ -53,6 +53,11 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   .card.unplayable:not(:hover) {
     -webkit-filter: grayscale(50%) opacity(60%);
     filter: grayscale(50%) opacity(60%);
+    box-shadow: 0 0 15px gold;
+  }
+  .card.free:not(:hover) {
+    -webkit-filter: saturate(200%);
+    filter: saturate(200%);
   }
   .board {
     background-size: contain;

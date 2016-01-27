@@ -714,6 +714,45 @@ var validPlays = function(player, game, hand, free) {
   return plays;
 };
 
+var isFree = function(player, card, free) {
+  // check duplicates
+  if (player.built.some(function(built) {
+    return built.name == card.name;
+  })) {
+    return false;
+  }
+
+  if (free || card.cost.length == 0) {
+    return true;
+  }
+
+  for (var i = card.cost.length - 1, cost; cost = card.cost[i]; i--) {
+    switch (typeof cost) {
+      case 'string':
+        // Search for already built card
+        if (player.built.some(function(built) {
+          return built.name == cost;
+        })) {
+          return true;
+        }
+        break;
+      case 'object':
+        var needed = cost.slice(0);
+        fulfillWithSimpleResources(needed, player);
+        if (needed.length == 0) {
+          // fulfilled by simple resources
+          return true;
+        }
+
+        if (canGenerate(player.multiResources.slice(0), needed)) {
+          // fulfilled by generators
+          return true;
+        }
+     }
+  }
+  return false;
+}
+
 var canPlay = function(player, card, free) {
   // check duplicates
   if (player.built.some(function(built) {
@@ -1849,6 +1888,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     this.field.appendChild(hand);
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+      card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
     }, this);
     var selectedCardIndex = this.currHand.indexOf(this.card);
     var handFactory = React.createFactory(Hand);

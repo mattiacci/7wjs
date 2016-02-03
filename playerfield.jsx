@@ -36,13 +36,13 @@ window.PlayerField = function(props) {
     if (!cardList.length) {
       return null;
     }
-    var marginTop = -45;
+    var marginTop = -36;
     var cards = cardList.map(function(card, i) {
-      marginTop += 45;
+      marginTop += 36;
       return (
         <div key={i} style={{
           display: 'inline-block',
-          marginRight: -105,
+          marginRight: -86,
           marginTop: marginTop,
           verticalAlign: 'top'
         }}>
@@ -53,7 +53,7 @@ window.PlayerField = function(props) {
     return (
       <div key={i} style={{
         display: 'inline-block',
-        marginRight: 105
+        marginRight: 86
       }}>{cards}</div>
     );
   });

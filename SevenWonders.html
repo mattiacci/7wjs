@@ -23,18 +23,22 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     white-space: nowrap;
   }
   .card {
-    border-radius: 12px; /* used when images aren't available */
+    border-radius: 12px; /* used for highlights or when images aren't available */
     box-sizing: border-box;
     display: inline-block;
-    font-size: 14px;
-    height: 197px;
+    font-size: 12px;
+    height: 158px;
     margin: 5px 2px;
     padding: 6px;
     position: relative;
     transition: .2s all;
     vertical-align: text-top;
     white-space: normal;
-    width: 128px;
+    width: 102px;
+  }
+  .card:hover {
+    transform: scale(1.5);
+    z-index: 1;
   }
   .card .image {
     background: center no-repeat;
@@ -55,7 +59,6 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     filter: grayscale(50%) opacity(60%);
   }
   .card.free {
-    border-radius: 12px;
     box-shadow: 0 0 0px 3px gold;
   }
   .board {

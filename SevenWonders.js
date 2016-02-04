@@ -1143,7 +1143,7 @@ var Turn = function(player, game, hands, index, free) {
       } else if (verify(player, card, payment)) {
         player.built.push(card);
         game.endOfRoundPayments.push(payNeighbours(player, payment));
-      } else if (player.canBuildForFree[game.age]) {
+      } else if (player.canBuildForFree[game.age] && payment.east.length == 0 && payment.west.length == 0 && payment.bank == 0) {
         player.built.push(card);
         player.canBuildForFree[game.age] = false;
       } else {

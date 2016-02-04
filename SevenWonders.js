@@ -1464,7 +1464,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   });
 
   this.draw = function() {
-    this.field.innerHTML = '<h3>' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
+    this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
     this.field.style.background = 'rgba(0,0,0,0.2)';
     this.field.style.padding = '15px';
 
@@ -1485,7 +1485,6 @@ var RemotePlayer = function(field, turnsRef, id, name) {
       container
     );
 
-    this.field.style.marginBottom = '25px';
     this.field.style.border = '1px solid black';
   };
 
@@ -1880,7 +1879,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.draw = function() {
     console.log('draw start');
-    this.field.innerHTML = '<h3>' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: ' + this.currTurn.playerState.scoreTotal;
+    this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
     this.field.style.padding = '15px';
 
     // cards
@@ -1903,214 +1902,24 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       hand
     );
 
-    // payment
-    function makeSimple(context, name, text) {
-  	  var label = document.createElement('label');
-      label.style.display = 'block';
-
-    	var input = document.createElement('input');
-    	input.type = 'checkbox'
-    	input.name = name;
-      input.onclick = function() {
-      	if (input.checked) {
-        	context.collection[context.index] = text;
-        } else {
-        	context.collection[context.index] = '';
-        }
-        context.output.value = context.collection.filter(function(r) {
-        	return r != '';
-        }).join(' ');
-      };
-
-    	var span = document.createElement('span');
-    	span.innerHTML = text;
-
-    	label.appendChild(input);
-    	label.appendChild(span);
-
-      return label;
-    }
-
-    function makeRadio(context, name, text, selected) {
-    	var label = document.createElement('label');
-
-    	var input = document.createElement('input');
-    	input.type = 'radio'
-    	input.name = name;
-      input.onclick = function() {
-      	context.collection[context.index] = (text == 'NONE') ? '' : text;
-        context.output.value = context.collection.filter(function(r) {
-        	return r != '';
-        }).join(' ');
-      };
-
-      if (selected) {
-      	input.checked = true;
-      }
-
-    	var span = document.createElement('span');
-    	span.innerHTML = text;
-
-    	label.appendChild(input);
-    	label.appendChild(span);
-
-      return label;
-    }
-
-    function makeMulti(context, name, multi) {
-    	var group = document.createElement('div');
-
-      var none = makeRadio(context, name, 'NONE', true);
-      group.appendChild(none);
-
-      for (var i = 0; i < multi.length; i++) {
-      	var resource = makeRadio(context, name, multi[i]);
-        group.appendChild(resource);
-      }
-
-      return group;
-    }
-
-    function makePaymentOptions(className, simple, multi) {
-    	var collection = [];
-      var container = document.createElement('div');
-      var output = document.createElement('input');
-      output.disabled = true;
-      output.style.width = '100%';
-      output.style.display = 'none';
-      output.className = className;
-
-      for (var i = 0; i < simple.length; i++) {
-      	var label = makeSimple({collection: collection, index: i, output: output}, className.charAt(0) + 'p' + id + 's' + i, simple[i]);
-      	container.appendChild(label);
-      }
-
-      for (var j = 0; j < multi.length; j++) {
-      	var group = makeMulti({collection: collection, index: i + j, output: output}, className.charAt(0) + 'p' + id + 'm' + j, multi[j]);
-        container.appendChild(group);
-      }
-
-      container.appendChild(output);
-
-      return container;
-    }
-
-
-    var simple = [];
-    for (resource in Resource) {
-      var amount = this.currTurn.playerState.east.resources[Resource[resource]];
-      for (var i = 0; i < amount; i++) {
-        simple.push(resource);
-      }
-    }
-
-    var multi = this.currTurn.playerState.east.multiResources.filter(function(m) {
-      return m.length == 2;
-    }).map(function (m) {
-      return m.map(function (r) {
-        for (resource in Resource) {
-          if (Resource[resource] == r) {
-            return resource;
+    var paymentEl = document.createElement('div');
+    this.field.appendChild(paymentEl);
+    ReactDOM.render(
+      React.createFactory(PaymentForm)({
+        east: this.currTurn.playerState.east,
+        onSubmit: function(action, payment) {
+          if (turnsRef) {
+            turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
+          } else {
+            console.warn('No turnsRef');
+            playerInterface.currTurn.play(action, playerInterface.card, payment);
           }
-        }
-      });
-    });
+        },
+        west: this.currTurn.playerState.west
+      }),
+      paymentEl
+    );   
 
-    var eastPayment = document.createElement('div');
-    eastPayment.style.marginTop = '.5em';
-    var eastLabel = document.createElement('div');
-    eastLabel.innerHTML = 'Resources to purchase from eastern neighbor: ';
-    eastPayment.appendChild(eastLabel);
-    eastPayment.appendChild(makePaymentOptions('east', simple, multi));
-    this.field.appendChild(eastPayment);
-
-    var simple = [];
-    for (resource in Resource) {
-      var amount = this.currTurn.playerState.west.resources[Resource[resource]];
-      for (var i = 0; i < amount; i++) {
-        simple.push(resource);
-      }
-    }
-
-    var multi = this.currTurn.playerState.west.multiResources.filter(function(m) {
-      return m.length == 2;
-    }).map(function (m) {
-      return m.map(function (r) {
-        for (resource in Resource) {
-          if (Resource[resource] == r) {
-            return resource;
-          }
-        }
-      });
-    });
-
-    var westPayment = document.createElement('div');
-    westPayment.style.marginTop = '.5em';
-    var westLabel = document.createElement('div');
-    westLabel.innerHTML = 'Resources to purchase from western neighbor: ';
-    westPayment.appendChild(westLabel);
-    westPayment.appendChild(makePaymentOptions('west', simple, multi));
-    this.field.appendChild(westPayment);
-
-    var bankPayment = document.createElement('div');
-    bankPayment.style.marginTop = '.5em';
-    bankPayment.style.marginBottom = '.5em';
-    var payBank = document.createElement('input');
-    payBank.type = 'checkbox';
-    payBank.className = 'bank';
-    var bankLabel = document.createElement('div');
-    bankLabel.innerHTML = 'Pay bank';
-    bankLabel.style.display = 'inline';
-    bankPayment.appendChild(payBank);
-    bankPayment.appendChild(bankLabel);
-    this.field.appendChild(bankPayment);
-
-    var go = function() {
-      var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
-      var east = playerInterface.field.querySelector('.east').value.split(' ').map(function(resource) {
-        return resourceSymbols.indexOf(resource.toLowerCase());
-      }).filter(function(resource) {
-        return resource >= 0 && resource <= 6;
-      });
-      var west = playerInterface.field.querySelector('.west').value.split(' ').map(function(resource) {
-        return resourceSymbols.indexOf(resource.toLowerCase());
-      }).filter(function(resource) {
-        return resource >= 0 && resource <= 6;
-      });
-      var bank = playerInterface.field.querySelector('.bank').checked ? 1 : 0;
-      var payment = {east: east, west: west, bank: bank};
-
-      if (turnsRef) {
-        turnsRef.push({id: id, action: playerInterface.action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
-      } else {
-        console.log('WARNING: no turnsRef');
-        playerInterface.currTurn.play(playerInterface.action, playerInterface.card, payment);
-      }
-    };
-
-    var build = document.createElement('button');
-    build.style.marginRight = '.5em';
-    build.innerHTML = 'Build';
-    build.onclick = function() {
-      playerInterface.action = Action.BUILD;
-      go();
-    };
-    this.field.appendChild(build);
-    var wonder = document.createElement('button');
-    wonder.style.marginRight = '.5em';
-    wonder.innerHTML = 'Build Wonder';
-    wonder.onclick = function() {
-      playerInterface.action = Action.BUILD_WONDER;
-      go();
-    };
-    this.field.appendChild(wonder);
-    var discard = document.createElement('button');
-    discard.innerHTML = 'Discard';
-    discard.onclick = function() {
-      playerInterface.action = Action.DISCARD;
-      go();
-    };
-    this.field.appendChild(discard);
 
     var container = document.createElement('div');
     this.field.appendChild(container);
@@ -2129,7 +1938,6 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       container
     );
 
-    this.field.style.marginBottom = '25px';
     this.field.style.border = '1px solid black';
 
     console.log('draw done');

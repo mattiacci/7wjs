@@ -38,7 +38,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   }
   .card:hover {
     transform: scale(1.5);
-    z-index: 1;
+    z-index: 2;
   }
   .card .image {
     background: center no-repeat;
@@ -53,6 +53,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   .card.selected .image {
     border-radius: 12px;
     box-shadow: 0 0 0px 3px red;
+    z-index: 1;
   }
   .card.unplayable:not(:hover) {
     -webkit-filter: grayscale(50%) opacity(60%);

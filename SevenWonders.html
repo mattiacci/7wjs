@@ -28,17 +28,18 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     display: inline-block;
     font-size: 12px;
     height: 158px;
-    margin: 5px 2px;
+    margin: 5px 3px;
     padding: 6px;
     position: relative;
     transition: .2s all;
     vertical-align: text-top;
     white-space: normal;
     width: 102px;
+    z-index: 0; /* Explicit z-index for transition. */
   }
   .card:hover {
     transform: scale(1.5);
-    z-index: 1;
+    z-index: 100; /* 100 is enough that the easing works well when multiple cards are transitioning. */
   }
   .card .image {
     background: center no-repeat;

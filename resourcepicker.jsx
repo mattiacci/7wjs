@@ -48,29 +48,11 @@ window.ResourcePicker = React.createClass({
         single.push(
           <div key={index} style={{
             display: 'inline-block',
-            padding: 2
           }}>
-            <div style={{
-              alignItems: 'center',
-              background: 'linear-gradient(#f8f8f8, #ccc)',
-              borderRadius: '50%',
-              boxShadow: selected ? 'inset 0 0 0 1px red' : 'inset 0 0 0 1px #888',
-              cursor: 'default',
-              display: 'flex',
-              fontSize: 12,
-              height: 32,
-              justifyContent: 'center',
-              lineHeight: '32px',
-              overflow: 'hidden',
-              // padding: selected ? 0 : 1,
-              textTransform: 'lowercase',
-              mozUserSelect: 'none',
-              msUserSelect: 'none',
-              WebkitUserSelect: 'none',
-              width: 32
-            }} onClick={this.handleResourceChange.bind(this, index, value)}>{resourceName}</div>
+            <ResourceButton resource={resourceName} selected={selected} onButtonClick={this.handleResourceChange.bind(this, index, value)} />
           </div>
         );
+        single.push(<span key={'space' + index}> </span>);
         index++;
       }
     }
@@ -84,53 +66,14 @@ window.ResourcePicker = React.createClass({
       var selectedLeft = this.state.selected[index] === m[0];
       var selectedRight = this.state.selected[index] === m[1];
       multi.push(
-        <div key={index} style={{
-          display: 'inline-flex',
-          fontSize: 12,
-          padding: 2,
-          textTransform: 'lowercase'
-        }}>
-          <div style={{
-            alignItems: 'center',
-            background: 'linear-gradient(#f8f8f8, #ccc)',
-            // border: selectedLeft ? '1px solid red' : undefined,
-            borderRadius: '16px 0 0 16px',
-            boxShadow: selectedLeft ? 'inset 0 0 0 1px red' : 'inset 0 0 0 1px #888',
-            boxSizing: 'border-box',
-            cursor: 'default',
-            display: 'flex',
-            height: 32,
-            justifyContent: 'center',
-            overflow: 'hidden',
-            // padding: selectedLeft ? 0 : 1,
-            mozUserSelect: 'none',
-            msUserSelect: 'none',
-            WebkitUserSelect: 'none',
-            width: 32
-          }} onClick={this.handleResourceChange.bind(this, index, m[0])}>{ResourceFromNumber[m[0]]}</div>
-          <div style={{
-            alignItems: 'center',
-            background: 'linear-gradient(#f8f8f8, #ccc)',
-            // border: selectedRight ? '1px solid red' : undefined,
-            borderRadius: '0 16px 16px 0',
-            boxShadow: selectedRight ? 'inset 0 0 0 1px red' : 'inset 0 0 0 1px #888',
-            boxSizing: 'border-box',
-            cursor: 'default',
-            display: 'flex',
-            height: 32,
-            justifyContent: 'center',
-            overflow: 'hidden',
-            // padding: selectedRight ? 0 : 1,
-            mozUserSelect: 'none',
-            msUserSelect: 'none',
-            WebkitUserSelect: 'none',
-            width: 32
-          }} onClick={this.handleResourceChange.bind(this, index, m[1])}>{ResourceFromNumber[m[1]]}</div>
+        <div className="multi" key={index}>
+          <ResourceButton resource={ResourceFromNumber[m[0]]} selected={selectedLeft} onButtonClick={this.handleResourceChange.bind(this, index, m[0])} />
+          <ResourceButton resource={ResourceFromNumber[m[1]]} selected={selectedRight} onButtonClick={this.handleResourceChange.bind(this, index, m[1])} />
         </div>
       );
+      single.push(<span key={'space' + index}> </span>);
       index++;
     }
-
 
     return (
       <div className="ResourcePicker">

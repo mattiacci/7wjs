@@ -10,6 +10,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
 <script src="card.jsx" type="text/babel"></script>
 <script src="hand.jsx" type="text/babel"></script>
 <script src="wonderboard.jsx" type="text/babel"></script>
+<script src="resourcebutton.jsx" type="text/babel"></script>
 <script src="resourcepicker.jsx" type="text/babel"></script>
 <script src="paymentform.jsx" type="text/babel"></script>
 <script src="playerfield.jsx" type="text/babel"></script>
@@ -84,6 +85,11 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   .wonder {
     padding: 0 11px 57px;
     position: relative;
+  }
+  .ResourcePicker .multi {
+    background-image: -webkit-linear-gradient(90deg, rgba(210,151,50,0) 25%,rgba(210,151,50,1) 25%,rgba(210,151,50,1) 75%,rgba(210,151,50,0) 75%);
+    background-image: linear-gradient(90deg, rgba(210,151,50,0) 25%,rgba(210,151,50,1) 25%,rgba(210,151,50,1) 75%,rgba(210,151,50,0) 75%);
+    display: inline-flex;
   }
 </style>
 <div id="app"></div>

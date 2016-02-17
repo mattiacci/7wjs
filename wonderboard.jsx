@@ -2,14 +2,14 @@
 window.WonderBoard = function(props) {
   var start, delta;
   if (props.side == 'A' || props.stageCount == 6) {
-    start = 37;
-    delta = 151;
+    start = 38;
+    delta = 116;
   } else if (props.stageCount == 7) {
-    start = -10;
-    delta = 133;
+    start = 0;
+    delta = 105;
   } else if (props.stageCount == 5) {
-    start = 188;
-    delta = 151;
+    start = 155;
+    delta = 116;
   } else {
     console.error('WonderBoard: Unknown board');
     return <div />;

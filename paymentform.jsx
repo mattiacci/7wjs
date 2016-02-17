@@ -58,7 +58,9 @@ window.PaymentForm = React.createClass({
           </div>
         </div>
         <div style={{margin: '.5em 0'}}>
-          <input type="checkbox" checked={!!this.state.bank} onChange={this.handleBankChange} /> Pay bank
+          <label>
+            <input type="checkbox" checked={!!this.state.bank} onChange={this.handleBankChange} /> Pay bank
+          </label>
         </div>
         <div>
           <button onClick={this.handleButtonClick.bind(this, Action.BUILD)}>Build</button>

@@ -25,7 +25,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     white-space: nowrap;
   }
   .card {
-    border-radius: 12px; /* used for highlights or when images aren't available */
+    border-radius: 8px; /* used for highlights or when images aren't available */
     box-sizing: border-box;
     display: inline-block;
     font-size: 12px;
@@ -46,7 +46,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
   .card .image {
     background: center no-repeat;
     background-size: contain;
-    border-radius: 12px; /* used to crop image */
+    border-radius: 8px; /* used to crop image */
     bottom: 0;
     left: 0;
     position: absolute;
@@ -54,7 +54,7 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     top: 0;
   }
   .card.selected .image {
-    border-radius: 12px;
+    border-radius: 8px;
     box-shadow: 0 0 0px 3px red;
   }
   .card.unplayable:not(:hover) {
@@ -68,24 +68,21 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     background-size: contain;
     background-position: top;
     background-repeat: no-repeat;
-    width: 510px;
-    height: 224px;
-    position: absolute;
+    width: 395px;
+    height: 173px;
+    position: relative;
   }
   .back {
     position: absolute;
-    border-radius: 12px;
-    width: 128px;
-    height: 197px;
-    top: 169px;
-    z-index: 0;
+    border-radius: 8px;
+    bottom: 0;
+    width: 102px;
+    height: 158px;
     background-size: contain;
     background-repeat: no-repeat;
   }
   .wonder {
-    margin-left: 15px;
-    width: 510px;
-    height: 390px;
+    padding: 0 11px 57px;
     position: relative;
   }
 </style>

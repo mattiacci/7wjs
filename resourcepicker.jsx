@@ -17,7 +17,7 @@ Object.keys(Resource).forEach(function(key) {
 
 window.ResourcePicker = React.createClass({
   propTypes: {
-    multi: React.PropTypes.object,
+    multi: React.PropTypes.array,
     onSelectionChange: React.PropTypes.func,
     single: React.PropTypes.object,
   },

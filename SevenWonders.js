@@ -346,7 +346,10 @@ var AGE2DECK = [
 // Change to end of game, greedy does not work.
 var anyScienceReward = function() {
   return function(player) {
-    player.bonusSciences++;
+    player.endGameRewards.push(function(player) {
+      player.bonusSciences++;
+      return {type: Scoring.GUILD, points: 0};
+    });
   };
 };
 var strategistReward = function() {

@@ -346,10 +346,7 @@ var AGE2DECK = [
 // Change to end of game, greedy does not work.
 var anyScienceReward = function() {
   return function(player) {
-    player.endGameRewards.push(function(player) {
-      player.bonusSciences++;
-      return {type: Scoring.GUILD, points: 0};
-    });
+    player.bonusSciences++;
   };
 };
 var strategistReward = function() {
@@ -469,6 +466,8 @@ var guildCopyReward = function() {
         return {type: Scoring.GUILD, points: 0};
       }
 
+      var baseSciencePoints = calcScienceScore(player);
+
       // Count score for guilds using cloned player state
       // Get highest score
       var max = 0;
@@ -500,7 +499,7 @@ var guildCopyReward = function() {
         }
       }
       console.log('best reward', bestReward, bestGuild);
-      return bestReward(player);
+      return {type: Scoring.GUILD, points: max - baseSciencePoints};
       console.log('after', player.victoryPoints);
     });
   };
@@ -593,15 +592,22 @@ var clonePlayers = function(players) {
     clone.resources[Resource.CLOTH] = player.resources[Resource.CLOTH];
     clone.resources[Resource.PAPER] = player.resources[Resource.PAPER];
 
+    clone.bonusSciences = player.bonusSciences;
+    clone.stagesBuilt = Array.prototype.slice.call(player.stagesBuilt);
     clone.gold = player.gold;
-    clone.victoryPoints = [0, 0, 0, 0, 0, 0, 0]; // not cloned
     clone.military = player.military;
+    clone.multiResources = Array.prototype.slice.call(player.multiResources.map(function(resources) {
+      return Array.prototype.slice.call(resources);
+    }));
     clone.battleTokens = Array.prototype.slice.call(player.battleTokens);
     clone.built = Array.prototype.slice.call(player.built);
     clone.endGameRewards = []; // not cloned
     clone.canDoubleBuild = player.canDoubleBuild; // Babylon B
     clone.playDiscardedNow = player.playDiscardedNow; // Halikarnassos
     clone.canBuildForFree = Array.prototype.slice.call(player.canBuildForFree); // Olympia A
+    clone.victoryPoints = Array.prototype.slice.call(player.victoryPoints);
+    clone.currentScore = Array.prototype.slice.call(player.currentScore);
+    clone.scoreTotal = player.scoreTotal;
 
     return clone;
   });

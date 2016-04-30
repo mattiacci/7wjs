@@ -1404,6 +1404,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   this.field = field;
   this.currHand = [];
   this.currTurn = null;
+  this.currTurnEnded = true;
   this.action;
   this.card;
   this.payment;
@@ -1428,6 +1429,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
   this.play = function(hand, turn) {
     this.currHand = hand;
     this.currTurn = turn;
+    this.currTurnEnded = false;
     console.log('RemotePlayer drawing');
     this.draw();
     this.process();
@@ -1442,7 +1444,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
 
   this.process = function() {
     console.log('RemotePlayer processing', this.currTurn, this.pendingTurns);
-    if (this.currTurn != null && this.pendingTurns.length > 0) {
+    if (!this.currTurnEnded && this.pendingTurns.length > 0) {
       var turn = this.pendingTurns[0];
       console.log('RemotePlayer processing now', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
@@ -1453,7 +1455,8 @@ var RemotePlayer = function(field, turnsRef, id, name) {
       console.log('RemotePlayer checking if successful');
       if (success && this.currTurn == currTurn) {
         console.log('RemotePlayer setting turn to null');
-        this.currTurn = null;
+        // this.currTurn = null;
+        this.currTurnEnded = true;
         this.drawDone();
       } else {
         console.log('RemotePlayer play turn not successful, try next turn.');
@@ -1730,6 +1733,7 @@ var SevenWonders = function() {
         for (var i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
+            this.playerInterfaces[i].draw();
           }
         }
       }
@@ -1784,6 +1788,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.field = field;
   this.currHand = [];
   this.currTurn = null;
+  this.currTurnEnded = true;
   this.playedTurn;
   this.action;
   this.card;
@@ -1830,6 +1835,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     }
     this.currHand = hand;
     this.currTurn = turn;
+    this.currTurnEnded = false;
     console.log('PlayerInterface drawing');
     this.draw();
     this.process();
@@ -1849,7 +1855,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.process = function() {
     console.log('PlayerInterface processing', this.currTurn, this.pendingTurns);
-    if (this.currTurn != null && this.pendingTurns.length > 0) {
+    if (!this.currTurnEnded && this.pendingTurns.length > 0) {
       var turn = this.pendingTurns[0];
       console.log('PlayerInterface processing now', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
@@ -1860,7 +1866,8 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       console.log('PlayerInterface checking if successful', success, this.currTurn, currTurn, this.currTurn == currTurn);
       if (success && this.currTurn == currTurn) {
         console.log('PlayerInterface setting turn to null');
-        this.currTurn = null;
+        // this.currTurn = null;
+        this.currTurnEnded = true;
         this.drawDone();
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');

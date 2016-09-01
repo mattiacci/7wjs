@@ -53,7 +53,7 @@ window.Lobby = React.createClass({
     var games = Object.keys(this.props.games).map(function(gameName) {
       var game = this.props.games[gameName];
       return (
-        <tr key={gameName}>
+        <tr key={gameName} className={game.completed}>
           <td>{gameName}</td>
           <td>{game.players.join(', ')}</td>
           <td>
@@ -67,6 +67,7 @@ window.Lobby = React.createClass({
         <span><br />Player name: </span>
         <input value={this.state.playerName} onChange={this.handlePlayerNameChange} />
         <div><br />Games</div>
+        <input type="checkbox" className="hide-completed" defaultChecked />Hide completed games
         <table>
           <tbody>
             <tr style={{textAlign: 'left'}}>

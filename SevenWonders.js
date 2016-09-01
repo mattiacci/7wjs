@@ -1264,6 +1264,14 @@ var GameRoom = function(appContainer, gameField) {
 
   this.server = new Firebase(window.FIREBASE_SERVER);
 
+  this.endGame = function(gameName) {
+    var ref = this.server.child(gameName);
+    ref.transaction(function(game) {
+      game.completed = "yes";
+      return game;
+    });
+  };
+
   this.joinGame = function(gameName, playerName) {
     var ref = this.server.child(gameName);
     var id = -1;
@@ -1322,7 +1330,7 @@ var GameRoom = function(appContainer, gameField) {
           self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
         }
 
-        self.currGame = new SevenWonders(interfaces, boards, hands, snapshot.name().indexOf('wreck') == 0);
+        self.currGame = new SevenWonders(interfaces, boards, hands, snapshot.name().indexOf('wreck') == 0, self.endGame.bind(self, gameName));
       }
     });
   };
@@ -1345,8 +1353,8 @@ var GameRoom = function(appContainer, gameField) {
           var remotePlayerInterface = new RemotePlayer(remotePlayerField, turnsRef, i, 'Open slot');
           interfaces.push(remotePlayerInterface);
         }
-        self.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') == 0);
-        return {numPlayers: numPlayers, playersJoined: 1, players: [name], boards: boards, hands: hands};
+        self.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') == 0, self.endGame.bind(self, gameName));
+        return {numPlayers: numPlayers, playersJoined: 1, players: [name], boards: boards, hands: hands, completed: 'no'};
       } else {
         console.log('Game already exists, please pick a new name.');
         return current_value;
@@ -1511,10 +1519,11 @@ var RemotePlayer = function(field, turnsRef, id, name) {
 
 var SevenWonders = function() {
 
-  this.init = function(interfaces, boards, hands, wreck) {
+  this.init = function(interfaces, boards, hands, wreck, endGame) {
     this.numPlayers = interfaces.length;
     this.playerInterfaces = interfaces.slice(0);
     this.wreckANation = !!wreck;
+    this.endGameCallback = endGame;
 
     // Set up players
     var len = this.numPlayers;
@@ -1682,6 +1691,8 @@ var SevenWonders = function() {
 
     var scoreContainer = document.querySelector("#score");
     scoreContainer.appendChild(score);
+
+    this.endGameCallback();
   };
   this.doBattle = function() {
     for (var i = 0; i < this.numPlayers; i++) {

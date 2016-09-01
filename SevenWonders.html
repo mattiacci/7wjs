@@ -91,6 +91,13 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     background-image: linear-gradient(90deg, rgba(210,151,50,0) 25%,rgba(210,151,50,1) 25%,rgba(210,151,50,1) 75%,rgba(210,151,50,0) 75%);
     display: inline-flex;
   }
+  .hide-completed:checked ~ table .yes {
+    display: none;
+  }
+
+  .yes {
+    color: grey;
+  }
 </style>
 <div id="app"></div>
 <div id="score"></div>

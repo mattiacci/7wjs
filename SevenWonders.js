@@ -624,7 +624,8 @@ var clonePlayers = function(players) {
 var Action = {
   BUILD: 0,
   BUILD_WONDER: 1,
-  DISCARD: 2
+  DISCARD: 2,
+  UNDO: 3
 };
 
 var getNextStage = function(player) {
@@ -1116,9 +1117,22 @@ var Turn = function(player, game, hands, index, free) {
   this.playerState = player;
   this.free = free;
   this.age = game.age;
-  var played = false;
+  this.played = false;
+  this.undoStack = [];
+  var self = this;
+  this.undo = function() {
+    for (var i = 0; i < this.undoStack.length; i++) {
+      this.undoStack[i]();
+    }
+    // Maybe
+  }
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
+
+    if (this.played && action == Action.UNDO) {
+      this.undo();
+      return;
+    }
 
     // Firebase does not store empty arrays
     if (!payment.east) {
@@ -1129,7 +1143,7 @@ var Turn = function(player, game, hands, index, free) {
       payment.west = [];
     }
 
-    if (played) {
+    if (this.played) {
       console.log('ERROR: already played this turn. ignoring attempt');
       return false;
     }
@@ -1149,18 +1163,36 @@ var Turn = function(player, game, hands, index, free) {
 
       if (free) {
         player.built.push(card);
+        this.undoStack.push(function() {
+          player.built.pop();
+        });
       } else if (verify(player, card, payment)) {
         player.built.push(card);
-        game.endOfRoundPayments.push(payNeighbours(player, payment));
+        var payNeighboursFn = payNeighbours(player, payment);
+        game.endOfRoundPayments.push(payNeighboursFn);
+        this.undoStack.push(function() {
+          var i = game.endOfRoundPayments.indexOf(payNeighboursFn);
+          game.endOfRoundPayments.splice(i, 1);
+          player.built.pop();
+        });
       } else if (player.canBuildForFree[game.age] && payment.east.length == 0 && payment.west.length == 0 && payment.bank == 0) {
         player.built.push(card);
         player.canBuildForFree[game.age] = false;
+        this.undoStack.push(function() {
+          player.built.pop();
+          player.canBuildForFree[game.age] = true;
+        });
       } else {
         console.log('ERROR: Incorrect payment, or unable to play for building.');
         return false;
       }
       // reward at end of round
-      game.endOfRoundRewards.push(executeReward(card.rewards, player));
+      var executeRewardsFn = executeReward(card.rewards, player);
+      game.endOfRoundRewards.push(executeRewardsFn);
+      this.undoStack.push(function() {
+        var i = game.endOfRoundRewards.indexOf(executeRewardsFn);
+        game.endOfRoundRewards.splice(i, 1);
+      });
     } else if (action == Action.BUILD_WONDER && !free) {
       var stage = getNextStage(player);
       if (!stage) {
@@ -1174,9 +1206,19 @@ var Turn = function(player, game, hands, index, free) {
       player.built.push(stage);
       player.stagesBuilt.push(card.age);
       // pay neighbours at end of round
-      game.endOfRoundPayments.push(payNeighbours(player, payment));
+      var payNeighboursFn = payNeighbours(player, payment);
+      game.endOfRoundPayments.push(payNeighboursFn);
       // reward at end of round
-      game.endOfRoundRewards.push(executeReward(stage.rewards, player));
+      var executeRewardsFn = executeReward(stage.rewards, player)
+      game.endOfRoundRewards.push(executeRewardsFn);
+      this.undoStack.push(function() {
+        var i = game.endOfRoundRewards.indexOf(executeRewardsFn);
+        game.endOfRoundRewards.splice(i, 1);
+        i = game.endOfRoundPayments.indexOf(payNeighboursFn);
+        game.endOfRoundPayments.splice(i, 1);
+        player.stagesBuilt.pop();
+        player.built.pop();
+      });
     } else if (action == Action.DISCARD) {
       if (game.wreckANation) {
         if (noValidPlays(player, game, hands[index], free)) {
@@ -1188,6 +1230,11 @@ var Turn = function(player, game, hands, index, free) {
       }
       game.discarded.push(card);
       player.gold += 3;
+      this.undoStack.push(function() {
+        var i = game.discarded.indexOf(card);
+        game.discarded.splice(i, 1);
+        player.gold -= 3;
+      });
     } else {
       console.log('ERROR: attempting to build wonder on playDiscarded or attempting to build a duplicate card');
       return false;
@@ -1195,11 +1242,18 @@ var Turn = function(player, game, hands, index, free) {
     for (var i = 0; i < hands[index].length; i++) {
       if (hands[index][i] == card) {
         hands[index].splice(i, 1);
+        this.undoStack.push(function() {
+          hands[index].splice(i, 0, card)
+        });
         break;
       }
     }
-    played = true;
+    this.played = true;
     game.playersDone++;
+    this.undoStack.push(function() {
+      self.played = false;
+      game.playersDone--;
+    });
 
     game.checkEndRound();
 
@@ -1808,6 +1862,11 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.loaded = false;
   this.name = name;
 
+  var undo = document.createElement('button');
+  undo.onclick = function() {
+    turnsRef.push({id: id, action: Action.UNDO});
+  };
+
   this.doneBox = document.createElement('div');
   this.doneBox.style.display = 'block';
   this.doneBox.style.height = '100%';
@@ -1816,6 +1875,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.doneBox.style.left = 0;
   this.doneBox.style.top = 0;
   this.doneBox.innerHTML = 'WAITING FOR OTHER PLAYERS';
+  this.doneBox.appendChild(undo);
   this.doneBox.style.textAlign = 'center';
   this.doneBox.style.background = 'rgba(255, 196, 0, 0.4)';
   this.doneBox.style.color = 'white';
@@ -1879,7 +1939,11 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         console.log('PlayerInterface setting turn to null');
         // this.currTurn = null;
         this.currTurnEnded = true;
-        this.drawDone();
+        if (turn.action == Action.UNDO) {
+          this.draw();
+        } else {
+          this.drawDone();
+        }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
         if (this.pendingTurns.length > 0) {

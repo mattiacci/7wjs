@@ -37,6 +37,10 @@ var TradeCost = {
 };
 
 var getCard = function(details) {
+  if (!details) {
+    return null;
+  }
+
   var fetched = AGE1DECK.concat(AGE2DECK).concat(AGE3DECK).filter(function(card) {
     var minP = Math.max(3, details.minPlayers);
     var minP2 = Math.max(3, card.minPlayers);
@@ -1121,17 +1125,16 @@ var Turn = function(player, game, hands, index, free) {
   this.undoStack = [];
   var self = this;
   this.undo = function() {
-    for (var i = 0; i < this.undoStack.length; i++) {
-      this.undoStack[i]();
+    while(this.undoStack.length > 0) {
+      this.undoStack.pop()();
     }
-    // Maybe
   }
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
 
     if (this.played && action == Action.UNDO) {
       this.undo();
-      return;
+      return true;
     }
 
     // Firebase does not store empty arrays
@@ -1179,8 +1182,8 @@ var Turn = function(player, game, hands, index, free) {
         player.built.push(card);
         player.canBuildForFree[game.age] = false;
         this.undoStack.push(function() {
-          player.built.pop();
           player.canBuildForFree[game.age] = true;
+          player.built.pop();
         });
       } else {
         console.log('ERROR: Incorrect payment, or unable to play for building.');
@@ -1232,11 +1235,11 @@ var Turn = function(player, game, hands, index, free) {
       player.gold += 3;
       this.undoStack.push(function() {
         var i = game.discarded.indexOf(card);
-        game.discarded.splice(i, 1);
         player.gold -= 3;
+        game.discarded.splice(i, 1);
       });
     } else {
-      console.log('ERROR: attempting to build wonder on playDiscarded or attempting to build a duplicate card');
+      console.log('ERROR: attempting to build wonder on playDiscarded or attempting to build a duplicate card or attempting to undo before playing');
       return false;
     }
     for (var i = 0; i < hands[index].length; i++) {
@@ -1251,8 +1254,8 @@ var Turn = function(player, game, hands, index, free) {
     this.played = true;
     game.playersDone++;
     this.undoStack.push(function() {
-      self.played = false;
       game.playersDone--;
+      self.played = false;
     });
 
     game.checkEndRound();
@@ -1506,8 +1509,13 @@ var RemotePlayer = function(field, turnsRef, id, name) {
 
   this.process = function() {
     console.log('RemotePlayer processing', this.currTurn, this.pendingTurns);
-    if (!this.currTurnEnded && this.pendingTurns.length > 0) {
-      var turn = this.pendingTurns[0];
+    var turn;
+    var isUndo = false;
+    if (this.pendingTurns.length > 0) {
+      turn = this.pendingTurns[0];
+      isUndo = turn.action == Action.UNDO;
+    }
+    if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
       console.log('RemotePlayer processing now', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
       console.log('RemotePlayer executing turn', turn.action, getCard(turn.card), turn.payment);
@@ -1518,13 +1526,18 @@ var RemotePlayer = function(field, turnsRef, id, name) {
       if (success && this.currTurn == currTurn) {
         console.log('RemotePlayer setting turn to null');
         // this.currTurn = null;
-        this.currTurnEnded = true;
-        this.drawDone();
+        if (isUndo) {
+          this.currTurnEnded = false;
+          this.draw();
+        } else {
+          this.currTurnEnded = true;
+          this.drawDone();
+        }
       } else {
         console.log('RemotePlayer play turn not successful, try next turn.');
-        if (this.pendingTurns.length > 0) {
-          this.process();
-        }
+      }
+      if (this.pendingTurns.length > 0) {
+        this.process();
       }
     }
   };
@@ -1863,6 +1876,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.name = name;
 
   var undo = document.createElement('button');
+  undo.innerHTML = "UNDO";
   undo.onclick = function() {
     turnsRef.push({id: id, action: Action.UNDO});
   };
@@ -1874,7 +1888,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.doneBox.style.position = 'absolute';
   this.doneBox.style.left = 0;
   this.doneBox.style.top = 0;
-  this.doneBox.innerHTML = 'WAITING FOR OTHER PLAYERS';
+  this.doneBox.innerHTML = 'WAITING FOR OTHER PLAYERS ';
   this.doneBox.appendChild(undo);
   this.doneBox.style.textAlign = 'center';
   this.doneBox.style.background = 'rgba(255, 196, 0, 0.4)';
@@ -1926,8 +1940,13 @@ var PlayerInterface = function(field, turnsRef, id, name) {
 
   this.process = function() {
     console.log('PlayerInterface processing', this.currTurn, this.pendingTurns);
-    if (!this.currTurnEnded && this.pendingTurns.length > 0) {
-      var turn = this.pendingTurns[0];
+    var turn;
+    var isUndo = false;
+    if (this.pendingTurns.length > 0) {
+      turn = this.pendingTurns[0];
+      isUndo = turn.action == Action.UNDO;
+    }
+    if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
       console.log('PlayerInterface processing now', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
       console.log('PlayerInterface executing turn', turn.action, getCard(turn.card), turn.payment);
@@ -1938,19 +1957,21 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       if (success && this.currTurn == currTurn) {
         console.log('PlayerInterface setting turn to null');
         // this.currTurn = null;
-        this.currTurnEnded = true;
-        if (turn.action == Action.UNDO) {
+        if (isUndo) {
+          this.currTurnEnded = false;
           this.draw();
         } else {
+          this.currTurnEnded = true;
           this.drawDone();
         }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
-        if (this.pendingTurns.length > 0) {
-          this.process();
-        } else if (!success && this.loaded) {
+        if (!success && this.loaded) {
           alert('You have made a mistake! Try again...');
         }
+      }
+      if (this.pendingTurns.length > 0) {
+        this.process();
       }
     }
   };

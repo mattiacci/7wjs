@@ -1996,12 +1996,13 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     }
   };
 
+  window.setTimeout(function(interface) {
+    return function() {
+      interface.loaded = true;
+    };
+  }(playerInterface), 2000);
+
   turnsRef.on('child_added', function(snapshot) {
-    window.setTimeout(function(interface) {
-      return function() {
-        interface.loaded = true;
-      };
-    }(playerInterface), 0);
     var turn = snapshot.val();
     if (turn.id == id) {
       playerInterface.pendingTurns.push(turn);

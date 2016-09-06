@@ -1513,6 +1513,15 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     var isUndo = false;
     if (this.pendingTurns.length > 0) {
       turn = this.pendingTurns[0];
+      if (turn == 'wait') {
+        this.pendingTurns = this.pendingTurns.slice(1);
+        window.setTimeout(function(interface) {
+          return function() {
+            interface.process();
+          };
+        }(playerInterface), 0);
+        return;
+      }
       isUndo = turn.action == Action.UNDO;
     }
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
@@ -1547,6 +1556,8 @@ var RemotePlayer = function(field, turnsRef, id, name) {
     if (turn.id == id) {
       playerInterface.pendingTurns.push(turn);
       playerInterface.process();
+    } else if (turn.action == Action.UNDO) {
+      playerInterface.pendingTurns.push('wait');
     }
   });
 
@@ -1944,6 +1955,15 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     var isUndo = false;
     if (this.pendingTurns.length > 0) {
       turn = this.pendingTurns[0];
+      if (turn == 'wait') {
+        this.pendingTurns = this.pendingTurns.slice(1);
+        window.setTimeout(function(interface) {
+          return function() {
+            interface.process();
+          };
+        }(playerInterface), 0);
+        return;
+      }
       isUndo = turn.action == Action.UNDO;
     }
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
@@ -1986,6 +2006,8 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     if (turn.id == id) {
       playerInterface.pendingTurns.push(turn);
       playerInterface.process();
+    } else if (turn.action == Action.UNDO) {
+      playerInterface.pendingTurns.push('wait');
     }
   })
 

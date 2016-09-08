@@ -1128,6 +1128,7 @@ var Turn = function(player, game, hands, index, free) {
     while(this.undoStack.length > 0) {
       this.undoStack.pop()();
     }
+    window.setTimeout(game.resume.bind(game), 0);
   }
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
@@ -1515,11 +1516,6 @@ var RemotePlayer = function(field, turnsRef, id, name) {
       turn = this.pendingTurns[0];
       if (turn == 'wait') {
         this.pendingTurns = this.pendingTurns.slice(1);
-        window.setTimeout(function(interface) {
-          return function() {
-            interface.process();
-          };
-        }(playerInterface), 0);
         return;
       }
       isUndo = turn.action == Action.UNDO;
@@ -1596,6 +1592,11 @@ var RemotePlayer = function(field, turnsRef, id, name) {
 };
 
 var SevenWonders = function() {
+  this.resume = function() {
+    for (var i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].process();
+    }
+  };
 
   this.init = function(interfaces, boards, hands, wreck, endGame) {
     this.numPlayers = interfaces.length;
@@ -1811,6 +1812,11 @@ var SevenWonders = function() {
           console.log('player', i, 'can double build?', this.players[i].canDoubleBuild);
           if (this.players[i].canDoubleBuild && this.hands[this.age][i].length == 1) {
             this.playersDone--;
+            for (var j = 0; j < len; j++) {
+              if (this.playerInterfaces[j].preventUndo) {
+                this.playerInterfaces[j].preventUndo();
+              }
+            }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
             return;
           }
@@ -1833,6 +1839,11 @@ var SevenWonders = function() {
           this.players[i].playDiscardedNow = false;
           if (this.discarded.length > 0) {
             this.playersDone--;
+            for (var j = 0; j < len; j++) {
+              if (this.playerInterfaces[j].preventUndo) {
+                this.playerInterfaces[j].preventUndo();
+              }
+            }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
             return;
           }
@@ -1886,6 +1897,10 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.loaded = false;
   this.name = name;
 
+  this.preventUndo = function() {
+    undo.disabled = true;
+  };
+
   var undo = document.createElement('button');
   undo.innerHTML = "UNDO";
   undo.onclick = function() {
@@ -1929,6 +1944,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     if (this.loaded) {
       this.notify('It is your turn to play in Seven Wonders!');
     }
+    undo.disabled = false;
     this.currHand = hand;
     this.currTurn = turn;
     this.currTurnEnded = false;
@@ -1957,11 +1973,6 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       turn = this.pendingTurns[0];
       if (turn == 'wait') {
         this.pendingTurns = this.pendingTurns.slice(1);
-        window.setTimeout(function(interface) {
-          return function() {
-            interface.process();
-          };
-        }(playerInterface), 0);
         return;
       }
       isUndo = turn.action == Action.UNDO;

@@ -1208,7 +1208,7 @@ var Turn = function(player, game, hands, index, free) {
         return false;
       }
       player.built.push(stage);
-      player.stagesBuilt.push(card.age);
+      player.stagesBuilt.push(card);
       // pay neighbours at end of round
       var payNeighboursFn = payNeighbours(player, payment);
       game.endOfRoundPayments.push(payNeighboursFn);
@@ -1570,7 +1570,7 @@ var RemotePlayer = function(field, turnsRef, id, name) {
         cards: this.currTurn.playerState.built,
         gold: this.currTurn.playerState.gold,
         wonder: {
-          built: this.currTurn.playerState.stagesBuilt,
+          built: this.currTurn.playerState.stagesBuilt.map(function(card) { return card.age; }),
           name: this.currTurn.playerState.board.name,
           side: this.currTurn.playerState.side,
           stageCount: this.currTurn.playerState.board.stages.length
@@ -1828,7 +1828,7 @@ var SevenWonders = function() {
         for (var i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
-            this.playerInterfaces[i].draw();
+            this.playerInterfaces[i].drawDone();
           }
         }
       }

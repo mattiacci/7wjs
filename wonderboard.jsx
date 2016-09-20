@@ -14,13 +14,29 @@ window.WonderBoard = function(props) {
     console.error('WonderBoard: Unknown board');
     return <div />;
   }
-  var cardBacks = props.built.map(function(age, i) {
-    return (
-      <div className="back" style={{
-        backgroundImage: 'url("' + window.ASSET_URL_PREFIX + 'Assets/Age ' + age + '/Back.jpg")',
-        left: start + delta * i
-      }} />
-    );
+  var cardBacks = props.built.map(function(cardOrAge, i) {
+    var path = window.ASSET_URL_PREFIX + 'Assets/Age ';
+    if (cardOrAge.age) {
+      return (
+        <div>
+          <div className="back" style={{
+            backgroundImage: 'url("' + path + cardOrAge.age + '/' + cardOrAge.minPlayers + ' ' + cardOrAge.name + '.jpg")',
+            left: start + delta * i
+          }} />
+          <div className="back hoverable" style={{
+            backgroundImage: 'url("' + path + cardOrAge.age + '/Back.jpg")',
+            left: start + delta * i
+          }} />
+        </div>
+      );
+    } else {
+      return (
+        <div className="back" style={{
+          backgroundImage: 'url("' + path + cardOrAge + '/Back.jpg")',
+          left: start + delta * i
+        }} />
+      );
+    }
   });
   return (
     <div className="WonderBoard wonder">

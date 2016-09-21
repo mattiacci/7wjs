@@ -18,14 +18,12 @@ window.WonderBoard = function(props) {
     var path = window.ASSET_URL_PREFIX + 'Assets/Age ';
     if (cardOrAge.age) {
       return (
-        <div>
+        <div className="back-container" style={{left: start + delta * i}}>
           <div className="back" style={{
-            backgroundImage: 'url("' + path + cardOrAge.age + '/' + cardOrAge.minPlayers + ' ' + cardOrAge.name + '.jpg")',
-            left: start + delta * i
+            backgroundImage: 'url("' + path + cardOrAge.age + '/Back.jpg")'
           }} />
           <div className="back hoverable" style={{
-            backgroundImage: 'url("' + path + cardOrAge.age + '/Back.jpg")',
-            left: start + delta * i
+            backgroundImage: 'url("' + path + cardOrAge.age + '/' + cardOrAge.minPlayers + ' ' + cardOrAge.name + '.jpg")'
           }} />
         </div>
       );

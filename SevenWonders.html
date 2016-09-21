@@ -82,8 +82,26 @@ window.ASSET_URL_PREFIX = window.ASSET_URL_PREFIX || '';
     background-size: contain;
     background-repeat: no-repeat;
   }
+  .back.hoverable {
+    transform: rotateY(180deg);
+    opacity: 0;
+    transition: .2s all;
+  }
   .back.hoverable:hover {
-    opacity: 0.01;
+    opacity: 1;
+    transform: scale(1.5) translateY(-20px) rotateY(180deg);
+    z-index: 1;
+  }
+  .back-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 102px;
+    transition: .2s all;
+  }
+  .back-container:hover {
+    transform: rotateY(180deg);
+    z-index: 1;
   }
   .wonder {
     padding: 0 11px 57px;

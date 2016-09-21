@@ -1915,7 +1915,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.doneBox.style.left = 0;
   this.doneBox.style.top = 0;
   this.doneBox.innerHTML = 'WAITING FOR OTHER PLAYERS ';
-  this.doneBox.appendChild(undo);
+  // this.doneBox.appendChild(undo);
   this.doneBox.style.textAlign = 'center';
   this.doneBox.style.background = 'rgba(255, 196, 0, 0.4)';
   this.doneBox.style.color = 'white';

@@ -712,7 +712,7 @@ var noValidPlays = function(player, game, hand, free) {
 var validPlays = function(player, game, hand, free) {
   var plays = [];
 
-  // Check if player can build wonder  
+  // Check if player can build wonder
   var stage = getNextStage(player);
   if (!!stage && !free && canPlay(player, stage, false)) {
     plays.push(stage);
@@ -853,7 +853,7 @@ var canPlay = function(player, card, free) {
           return true;
         }
         break;
-    }  
+    }
   }
   return false;
 };
@@ -893,7 +893,7 @@ var canGenerateOrPay = function(needed, gold, resourceList, generatorList) {
           return generator.slice(0);
         });
       });
-      
+
       newResourceList[i].splice(index, 1);
       var remainingNeeded = needed.slice(0);
       remainingNeeded.splice(0, 1);
@@ -902,7 +902,7 @@ var canGenerateOrPay = function(needed, gold, resourceList, generatorList) {
         return true;
       }
     }
-    
+
     // Try generators
     var generators = generatorList[i];
     for (var j = 0; j < generators.length; j++) {
@@ -1388,6 +1388,21 @@ var GameRoom = function(appContainer, gameField) {
           self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
         }
 
+        // Handle any new game action (e.g. card being built)
+        turnsRef.on('child_added', function(snapshot) {
+          'use strict';
+          var turn = snapshot.val();
+          var interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
+          for (var i = 0; i < interfaces.length; i++) {
+            if (i == interfaceIndex) {
+              interfaces[i].pendingTurns.push(turn);
+              interfaces[i].process();
+            } else if (turn.action == Action.UNDO) {
+              interfaces[i].pendingTurns.push('wait');
+            }
+          }
+        });
+
         self.currGame = new SevenWonders(interfaces, boards, hands, snapshot.name().indexOf('wreck') == 0, self.endGame.bind(self, gameName));
       }
     });
@@ -1467,6 +1482,7 @@ var GameRoom = function(appContainer, gameField) {
 };
 
 var RemotePlayer = function(field, turnsRef, id, name) {
+  this.id = id;
   this.field = field;
   this.currHand = [];
   this.currTurn = null;
@@ -1546,16 +1562,6 @@ var RemotePlayer = function(field, turnsRef, id, name) {
       }
     }
   };
-
-  turnsRef.on('child_added', function(snapshot) {
-    var turn = snapshot.val();
-    if (turn.id == id) {
-      playerInterface.pendingTurns.push(turn);
-      playerInterface.process();
-    } else if (turn.action == Action.UNDO) {
-      playerInterface.pendingTurns.push('wait');
-    }
-  });
 
   this.draw = function() {
     this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
@@ -1885,6 +1891,7 @@ var SevenWonders = function() {
 
 // Basic player interface
 var PlayerInterface = function(field, turnsRef, id, name) {
+  this.id = id;
   this.field = field;
   this.currHand = [];
   this.currTurn = null;
@@ -2013,16 +2020,6 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     };
   }(playerInterface), 2000);
 
-  turnsRef.on('child_added', function(snapshot) {
-    var turn = snapshot.val();
-    if (turn.id == id) {
-      playerInterface.pendingTurns.push(turn);
-      playerInterface.process();
-    } else if (turn.action == Action.UNDO) {
-      playerInterface.pendingTurns.push('wait');
-    }
-  })
-
   this.draw = function() {
     console.log('draw start');
     this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
@@ -2064,7 +2061,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         west: this.currTurn.playerState.west
       }),
       paymentEl
-    );   
+    );
 
 
     var container = document.createElement('div');

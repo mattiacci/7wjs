@@ -1368,7 +1368,7 @@ var GameRoom = function(appContainer, gameField) {
         var interfaces = [];
         var turnsRef = self.server.child(gameName).child('turns');
         var playerField = document.createElement('div');
-        var playerInterface = new PlayerInterface(playerField, turnsRef, id, game.players[id]);
+        var playerInterface = new PlayerInterface(playerField, turnsRef, id, game.players[id], true  /* isLocal */);
         var fields = [];
         for (var i = 0; i < game.numPlayers; i++) {
           if (i == id) {
@@ -1377,7 +1377,7 @@ var GameRoom = function(appContainer, gameField) {
           } else {
             var remotePlayerField = document.createElement('div');
             fields.push(remotePlayerField);
-            var remotePlayerInterface = new RemotePlayer(remotePlayerField, turnsRef, i, game.players[i]);
+            var remotePlayerInterface = new PlayerInterface(remotePlayerField, turnsRef, i, game.players[i]);
             interfaces.push(remotePlayerInterface);
           }
         }
@@ -1418,12 +1418,12 @@ var GameRoom = function(appContainer, gameField) {
         var turnsRef = self.server.child(gameName).child('turns');
         var playerField = document.createElement('div');
         self.gameField.appendChild(playerField);
-        var playerInterface = new PlayerInterface(playerField, turnsRef, 0, name);
+        var playerInterface = new PlayerInterface(playerField, turnsRef, 0, name, true /* isLocal */);
         interfaces.push(playerInterface);
         for (var i = 1; i < numPlayers; i++) {
           var remotePlayerField = document.createElement('div');
           self.gameField.appendChild(remotePlayerField);
-          var remotePlayerInterface = new RemotePlayer(remotePlayerField, turnsRef, i, 'Open slot');
+          var remotePlayerInterface = new PlayerInterface(remotePlayerField, turnsRef, i, 'Open slot');
           interfaces.push(remotePlayerInterface);
         }
         self.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') == 0, self.endGame.bind(self, gameName));
@@ -1479,122 +1479,6 @@ var GameRoom = function(appContainer, gameField) {
 
     return hands;
   };
-};
-
-var RemotePlayer = function(field, turnsRef, id, name) {
-  this.id = id;
-  this.field = field;
-  this.currHand = [];
-  this.currTurn = null;
-  this.currTurnEnded = true;
-  this.action;
-  this.card;
-  this.payment;
-  this.pendingTurns = [];
-  this.name = name;
-
-  this.doneBox = document.createElement('div');
-  this.doneBox.style.display = 'block';
-  this.doneBox.style.height = '100%';
-  this.doneBox.style.width = '100%';
-  this.doneBox.style.position = 'absolute';
-  this.doneBox.style.left = 0;
-  this.doneBox.style.top = 0;
-  this.doneBox.innerHTML = 'DONE';
-  this.doneBox.style.textAlign = 'center';
-  this.doneBox.style.background = 'rgba(128, 255, 128, 0.4)';
-  this.doneBox.style.color = 'grey';
-  this.doneBox.style.textShadow = '-2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, -1px -1px black, 1px -1px black, -1px 1px black, 1px 1px black';
-
-  var playerInterface = this;
-
-  this.play = function(hand, turn) {
-    this.currHand = hand;
-    this.currTurn = turn;
-    this.currTurnEnded = false;
-    console.log('RemotePlayer drawing');
-    this.draw();
-    this.process();
-  };
-  this.endGame = function(turn) {
-    this.currHand = [];
-    this.currTurn = turn;
-    console.log('RemotePlayer end game');
-    this.draw();
-  }
-  this.playBonus = this.play;
-
-  this.process = function() {
-    console.log('RemotePlayer processing', this.currTurn, this.pendingTurns);
-    var turn;
-    var isUndo = false;
-    if (this.pendingTurns.length > 0) {
-      turn = this.pendingTurns[0];
-      if (turn == 'wait') {
-        this.pendingTurns = this.pendingTurns.slice(1);
-        return;
-      }
-      isUndo = turn.action == Action.UNDO;
-    }
-    if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
-      console.log('RemotePlayer processing now', turn);
-      this.pendingTurns = this.pendingTurns.slice(1);
-      console.log('RemotePlayer executing turn', turn.action, getCard(turn.card), turn.payment);
-      // If this is the last payer executing play on the turn, the game will proceed to the next round.
-      var currTurn = this.currTurn;
-      var success = currTurn.play(turn.action, getCard(turn.card), turn.payment);
-      console.log('RemotePlayer checking if successful');
-      if (success && this.currTurn == currTurn) {
-        console.log('RemotePlayer setting turn to null');
-        // this.currTurn = null;
-        if (isUndo) {
-          this.currTurnEnded = false;
-          this.draw();
-        } else {
-          this.currTurnEnded = true;
-          this.drawDone();
-        }
-      } else {
-        console.log('RemotePlayer play turn not successful, try next turn.');
-      }
-      if (this.pendingTurns.length > 0) {
-        this.process();
-      }
-    }
-  };
-
-  this.draw = function() {
-    this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
-    this.field.style.background = 'rgba(0,0,0,0.2)';
-    this.field.style.padding = '15px';
-
-    var container = document.createElement('div');
-    this.field.appendChild(container);
-    ReactDOM.render(
-      React.createFactory(PlayerField)({
-        battleTokens: this.currTurn.playerState.battleTokens,
-        cards: this.currTurn.playerState.built,
-        gold: this.currTurn.playerState.gold,
-        wonder: {
-          built: this.currTurn.playerState.stagesBuilt.map(function(card) { return card.age; }),
-          name: this.currTurn.playerState.board.name,
-          side: this.currTurn.playerState.side,
-          stageCount: this.currTurn.playerState.board.stages.length
-        }
-      }),
-      container
-    );
-
-    this.field.style.border = '1px solid black';
-  };
-
-  this.drawDone = function() {
-    this.field.style.position = 'relative';
-    this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
-    this.doneBox.style.fontSize = this.field.offsetWidth / 10 + 'px';
-    this.field.appendChild(this.doneBox);
-  };
-
 };
 
 var SevenWonders = function() {
@@ -1889,9 +1773,9 @@ var SevenWonders = function() {
   }
 };
 
-// Basic player interface
-var PlayerInterface = function(field, turnsRef, id, name) {
+var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.id = id;
+  this.isLocal = isLocal;
   this.field = field;
   this.currHand = [];
   this.currTurn = null;
@@ -1921,11 +1805,10 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.doneBox.style.position = 'absolute';
   this.doneBox.style.left = 0;
   this.doneBox.style.top = 0;
-  this.doneBox.innerHTML = 'WAITING FOR OTHER PLAYERS ';
-  // this.doneBox.appendChild(undo);
+  this.doneBox.innerHTML = this.isLocal ? 'WAITING FOR OTHER PLAYERS' : 'DONE';
   this.doneBox.style.textAlign = 'center';
-  this.doneBox.style.background = 'rgba(255, 196, 0, 0.4)';
-  this.doneBox.style.color = 'white';
+  this.doneBox.style.background = this.isLocal ? 'rgba(255, 196, 0, 0.4)' : 'rgba(128, 255, 128, 0.4)';
+  this.doneBox.style.color = this.isLocal ? 'white' : 'grey';
   this.doneBox.style.textShadow = '-2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, -1px -1px black, 1px -1px black, -1px 1px black, 1px 1px black';
 
   var playerInterface = this;
@@ -1955,7 +1838,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     this.currHand = hand;
     this.currTurn = turn;
     this.currTurnEnded = false;
-    console.log('PlayerInterface drawing');
+    console.log(this.name, 'drawing');
     this.draw();
     this.process();
   };
@@ -1966,14 +1849,14 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     }
     this.currHand = [];
     this.currTurn = turn;
-    console.log('PlayerInterface end game');
+    console.log(this.name, 'end game');
     this.draw();
   }
 
   this.playBonus = this.play;
 
   this.process = function() {
-    console.log('PlayerInterface processing', this.currTurn, this.pendingTurns);
+    console.log(this.name, 'processing', this.currTurn, this.pendingTurns);
     var turn;
     var isUndo = false;
     if (this.pendingTurns.length > 0) {
@@ -1985,15 +1868,15 @@ var PlayerInterface = function(field, turnsRef, id, name) {
       isUndo = turn.action == Action.UNDO;
     }
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
-      console.log('PlayerInterface processing now', turn);
+      console.log(this.name, 'processing now', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
-      console.log('PlayerInterface executing turn', turn.action, getCard(turn.card), turn.payment);
+      console.log(this.name, 'executing turn', turn.action, getCard(turn.card), turn.payment);
       // If this is the last payer executing play on the turn, the game will proceed to the next round.
       var currTurn = this.currTurn;
       var success = currTurn.play(turn.action, getCard(turn.card), turn.payment);
-      console.log('PlayerInterface checking if successful', success, this.currTurn, currTurn, this.currTurn == currTurn);
+      console.log(this.name, 'checking if successful', success, this.currTurn, currTurn, this.currTurn == currTurn);
       if (success && this.currTurn == currTurn) {
-        console.log('PlayerInterface setting turn to null');
+        console.log(this.name, 'setting turn to null');
         // this.currTurn = null;
         if (isUndo) {
           this.currTurnEnded = false;
@@ -2014,15 +1897,18 @@ var PlayerInterface = function(field, turnsRef, id, name) {
     }
   };
 
-  window.setTimeout(function(interface) {
+  window.setTimeout(function(ui) {
     return function() {
-      interface.loaded = true;
+      ui.loaded = true;
     };
   }(playerInterface), 2000);
 
   this.draw = function() {
     console.log('draw start');
     this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
+    if (!this.isLocal) {
+    this.field.style.background = 'rgba(0,0,0,0.2)';
+    }
     this.field.style.padding = '15px';
 
     // cards
@@ -2072,7 +1958,9 @@ var PlayerInterface = function(field, turnsRef, id, name) {
         cards: this.currTurn.playerState.built,
         gold: this.currTurn.playerState.gold,
         wonder: {
-          built: this.currTurn.playerState.stagesBuilt,
+          built: this.isLocal ?
+              this.currTurn.playerState.stagesBuilt :
+              this.currTurn.playerState.stagesBuilt.map(function(card) { return card.age; }),
           name: this.currTurn.playerState.board.name,
           side: this.currTurn.playerState.side,
           stageCount: this.currTurn.playerState.board.stages.length
@@ -2089,7 +1977,7 @@ var PlayerInterface = function(field, turnsRef, id, name) {
   this.drawDone = function() {
     this.field.style.position = 'relative';
     this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
-    this.doneBox.style.fontSize = this.field.offsetWidth / 20 + 'px';
+    this.doneBox.style.fontSize = this.field.offsetWidth / (this.isLocal ? 20 : 10) + 'px';
     this.field.appendChild(this.doneBox);
   };
 

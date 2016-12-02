@@ -1787,10 +1787,13 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.pendingTurns = [];
   this.loaded = false;
   this.name = name;
+  var playerInterface = this;
 
-  this.preventUndo = function() {
-    undo.disabled = true;
-  };
+  window.setTimeout(function(ui) {
+    return function() {
+      ui.loaded = true;
+    };
+  }(playerInterface), 2000);
 
   var undo = document.createElement('button');
   undo.innerHTML = "UNDO";
@@ -1810,50 +1813,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.doneBox.style.background = this.isLocal ? 'rgba(255, 196, 0, 0.4)' : 'rgba(128, 255, 128, 0.4)';
   this.doneBox.style.color = this.isLocal ? 'white' : 'grey';
   this.doneBox.style.textShadow = '-2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, -1px -1px black, 1px -1px black, -1px 1px black, 1px 1px black';
-
-  var playerInterface = this;
-
-  this.notify = function(msg) {
-    if (!('Notification' in window)) {
-      alert(msg);
-    } else if (Notification.permission === 'granted') {
-      var notification = new Notification(msg);
-    } else if (Notification.permission !== 'denied') {
-      Notification.requestPermission(function (permission) {
-        if(!('permission' in Notification)) {
-          Notification.permission = permission;
-        }
-        if (permission === 'granted') {
-          var notification = new Notification(msg);
-        }
-      });
-    }
-  };
-
-  this.play = function(hand, turn) {
-    if (this.loaded) {
-      this.notify('It is your turn to play in Seven Wonders!');
-    }
-    undo.disabled = false;
-    this.currHand = hand;
-    this.currTurn = turn;
-    this.currTurnEnded = false;
-    console.log(this.name, 'drawing');
-    this.draw();
-    this.process();
-  };
-
-  this.endGame = function(turn) {
-    if (this.loaded) {
-      this.notify('Game Over!');
-    }
-    this.currHand = [];
-    this.currTurn = turn;
-    console.log(this.name, 'end game');
-    this.draw();
-  }
-
-  this.playBonus = this.play;
 
   this.process = function() {
     console.log(this.name, 'processing', this.currTurn, this.pendingTurns);
@@ -1907,18 +1866,19 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     console.log('draw start');
     this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
     if (!this.isLocal) {
-    this.field.style.background = 'rgba(0,0,0,0.2)';
+      this.field.style.background = 'rgba(0,0,0,0.2)';
     }
     this.field.style.padding = '15px';
 
     // cards
-    var hand = document.createElement('div');
-    this.field.appendChild(hand);
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
       card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
     }, this);
     var selectedCardIndex = this.currHand.indexOf(this.card);
+
+    var hand = document.createElement('div');
+    this.field.appendChild(hand);
     var handFactory = React.createFactory(Hand);
     ReactDOM.render(
       handFactory({
@@ -1979,6 +1939,50 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
     this.doneBox.style.fontSize = this.field.offsetWidth / (this.isLocal ? 20 : 10) + 'px';
     this.field.appendChild(this.doneBox);
+  };
+
+  this.endGame = function(turn) {
+    if (this.loaded) {
+      this.notify('Game Over!');
+    }
+    this.currHand = [];
+    this.currTurn = turn;
+    console.log(this.name, 'end game');
+    this.draw();
+  }
+
+  this.notify = function(msg) {
+    if (!('Notification' in window)) {
+      alert(msg);
+    } else if (Notification.permission === 'granted') {
+      var notification = new Notification(msg);
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission(function (permission) {
+        if(!('permission' in Notification)) {
+          Notification.permission = permission;
+        }
+        if (permission === 'granted') {
+          var notification = new Notification(msg);
+        }
+      });
+    }
+  };
+
+  this.playBonus = this.play = function(hand, turn) {
+    if (this.loaded) {
+      this.notify('It is your turn to play in Seven Wonders!');
+    }
+    undo.disabled = false;
+    this.currHand = hand;
+    this.currTurn = turn;
+    this.currTurnEnded = false;
+    console.log(this.name, 'drawing');
+    this.draw();
+    this.process();
+  };
+
+  this.preventUndo = function() {
+    undo.disabled = true;
   };
 
 };

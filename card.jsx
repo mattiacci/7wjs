@@ -7,7 +7,7 @@ var backgroundColors = ['rgb(192,128,96)','rgb(192,192,192)','rgb(255,255,0)','r
 window.Card = function(props) {
   var data = props.data;
   return (
-    <div className={'Card card' + (props.selected ? ' selected' : '') + (props.unplayable ? ' unplayable' : '') + (props.free ? ' free' : '')}
+    <div className={'Card card' + (props.selected ? ' selected' : '') + (props.unplayable ? ' unplayable' : '') + (props.free ? ' free' : '') + (props.isLast ? ' last' : '')}
          style={{backgroundColor: backgroundColors[data.type]}}>
       <h4 style={{margin: '0 0 .5em 0'}}>{data.name}</h4>
       {

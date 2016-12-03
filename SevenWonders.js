@@ -1918,6 +1918,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         cards: this.currTurn.playerState.built,
         gold: this.currTurn.playerState.gold,
         wonder: {
+          isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
           built: this.isLocal ?
               this.currTurn.playerState.stagesBuilt :
               this.currTurn.playerState.stagesBuilt.map(function(card) { return card.age; }),

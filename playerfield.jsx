@@ -15,6 +15,7 @@ var CardType = {
 };
 
 window.PlayerField = function(props) {
+  var lastBuiltCard = props.cards.length > 0 ? props.cards[props.cards.length - 1] : null;
   var builtCards = [];
   Object.keys(CardType).forEach(function(type) {
     builtCards[CardType[type]] = [];
@@ -46,7 +47,7 @@ window.PlayerField = function(props) {
           marginTop: marginTop,
           verticalAlign: 'top'
         }}>
-          <Card data={card} />
+          <Card data={card} isLast={card == lastBuiltCard}/>
         </div>
       );
     });
@@ -64,7 +65,7 @@ window.PlayerField = function(props) {
       <div>Battle Tokens: {props.battleTokens.join(' ')}</div>
       <div>Built:</div>
       <div>{cardTypes}</div>
-      <WonderBoard built={props.wonder.built} name={props.wonder.name} side={props.wonder.side} stageCount={props.wonder.stageCount} />
+      <WonderBoard isLast={props.wonder.isLast} built={props.wonder.built} name={props.wonder.name} side={props.wonder.side} stageCount={props.wonder.stageCount} />
     </div>
   );
 };

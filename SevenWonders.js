@@ -1133,9 +1133,14 @@ var Turn = function(player, game, hands, index, free) {
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
     console.log(player, game, hands, index, action, card, payment);
 
-    if (this.played && action == Action.UNDO) {
-      this.undo();
-      return true;
+    if (action == Action.UNDO) {
+      if (this.played) {
+        this.undo();
+        return true;
+      } else {
+        console.log('ERROR: attempting to undo without first taking an action');
+        return false;
+      }
     }
 
     // Firebase does not store empty arrays
@@ -1397,8 +1402,6 @@ var GameRoom = function(appContainer, gameField) {
             if (i == interfaceIndex) {
               interfaces[i].pendingTurns.push(turn);
               interfaces[i].process();
-            } else if (turn.action == Action.UNDO) {
-              interfaces[i].pendingTurns.push('wait');
             }
           }
         });
@@ -1800,7 +1803,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   undo.onclick = function() {
     turnsRef.push({id: id, action: Action.UNDO});
   };
-
+  
   this.doneBox = document.createElement('div');
   this.doneBox.style.display = 'block';
   this.doneBox.style.height = '100%';
@@ -1809,6 +1812,9 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.doneBox.style.left = 0;
   this.doneBox.style.top = 0;
   this.doneBox.innerHTML = this.isLocal ? 'WAITING FOR OTHER PLAYERS' : 'DONE';
+  if (this.isLocal) {
+    this.doneBox.appendChild(undo);
+  }
   this.doneBox.style.textAlign = 'center';
   this.doneBox.style.background = this.isLocal ? 'rgba(255, 196, 0, 0.4)' : 'rgba(128, 255, 128, 0.4)';
   this.doneBox.style.color = this.isLocal ? 'white' : 'grey';
@@ -1820,10 +1826,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     var isUndo = false;
     if (this.pendingTurns.length > 0) {
       turn = this.pendingTurns[0];
-      if (turn == 'wait') {
-        this.pendingTurns = this.pendingTurns.slice(1);
-        return;
-      }
       isUndo = turn.action == Action.UNDO;
     }
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
@@ -1871,44 +1873,45 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     this.field.style.padding = '15px';
 
     // cards
-    this.currHand.forEach(function(card) {
-      card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-      card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-    }, this);
-    var selectedCardIndex = this.currHand.indexOf(this.card);
+    if (this.isLocal) {
+      this.currHand.forEach(function(card) {
+        card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+        card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+      }, this);
+      var selectedCardIndex = this.currHand.indexOf(this.card);
 
-    var hand = document.createElement('div');
-    this.field.appendChild(hand);
-    var handFactory = React.createFactory(Hand);
-    ReactDOM.render(
-      handFactory({
-        cards: this.currHand,
-        onSelect: function(index) {
-          playerInterface.card = playerInterface.currHand[index];
-        },
-        selected: selectedCardIndex
-      }),
-      hand
-    );
+      var hand = document.createElement('div');
+      this.field.appendChild(hand);
+      var handFactory = React.createFactory(Hand);
+      ReactDOM.render(
+        handFactory({
+          cards: this.currHand,
+          onSelect: function(index) {
+            playerInterface.card = playerInterface.currHand[index];
+          },
+          selected: selectedCardIndex
+        }),
+        hand
+      );
 
-    var paymentEl = document.createElement('div');
-    this.field.appendChild(paymentEl);
-    ReactDOM.render(
-      React.createFactory(PaymentForm)({
-        east: this.currTurn.playerState.east,
-        onSubmit: function(action, payment) {
-          if (turnsRef) {
-            turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
-          } else {
-            console.warn('No turnsRef');
-            playerInterface.currTurn.play(action, playerInterface.card, payment);
-          }
-        },
-        west: this.currTurn.playerState.west
-      }),
-      paymentEl
-    );
-
+      var paymentEl = document.createElement('div');
+      this.field.appendChild(paymentEl);
+      ReactDOM.render(
+        React.createFactory(PaymentForm)({
+          east: this.currTurn.playerState.east,
+          onSubmit: function(action, payment) {
+            if (turnsRef) {
+              turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
+            } else {
+              console.warn('No turnsRef');
+              playerInterface.currTurn.play(action, playerInterface.card, payment);
+            }
+          },
+          west: this.currTurn.playerState.west
+        }),
+        paymentEl
+      );
+    }
 
     var container = document.createElement('div');
     this.field.appendChild(container);

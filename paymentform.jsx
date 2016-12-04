@@ -6,42 +6,43 @@ var Action = {
   DISCARD: 2
 };
 
-window.PaymentForm = React.createClass({
+window.PaymentForm = class PaymentForm extends React.Component {
   propTypes: {
     east: React.PropTypes.object.isRequired,
     onSubmit: React.PropTypes.func.isRequired,
     west: React.PropTypes.object.isRequired
-  },
-  getInitialState: function() {
-    return {
+  }
+  constructor(props) {
+    super(props);
+    this.state = {
       bank: 0,
       east: [],
       west: []
     };
-  },
-  handleBankChange: function() {
+  }
+  handleBankChange() {
     this.setState({
       bank: (this.state.bank + 1) % 2
     });
-  },
-  handleButtonClick: function(action) {
+  }
+  handleButtonClick(action) {
     this.props.onSubmit(action, {
       bank: this.state.bank,
       east: this.state.east,
       west: this.state.west
     });
-  },
-  handleEastPaymentChange: function(eastPayment) {
+  }
+  handleEastPaymentChange(eastPayment) {
     this.setState({
       east: eastPayment
     });
-  },
-  handleWestPaymentChange: function(westPayment) {
+  }
+  handleWestPaymentChange(westPayment) {
     this.setState({
       west: westPayment
     });
-  },
-  render: function() {
+  }
+  render() {
     return (
       <div className="PaymentForm">
         <div style={{
@@ -70,6 +71,6 @@ window.PaymentForm = React.createClass({
       </div>
     );
   }
-});
+};
 
 })();

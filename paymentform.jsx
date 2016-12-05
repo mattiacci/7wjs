@@ -1,17 +1,5 @@
-(function() {
-
-var Action = {
-  BUILD: 0,
-  BUILD_WONDER: 1,
-  DISCARD: 2
-};
-
 window.PaymentForm = class PaymentForm extends React.Component {
-  propTypes: {
-    east: React.PropTypes.object.isRequired,
-    onSubmit: React.PropTypes.func.isRequired,
-    west: React.PropTypes.object.isRequired
-  }
+
   constructor(props) {
     super(props);
     this.state = {
@@ -20,11 +8,13 @@ window.PaymentForm = class PaymentForm extends React.Component {
       west: []
     };
   }
+
   handleBankChange() {
     this.setState({
       bank: (this.state.bank + 1) % 2
     });
   }
+
   handleButtonClick(action) {
     this.props.onSubmit(action, {
       bank: this.state.bank,
@@ -32,16 +22,19 @@ window.PaymentForm = class PaymentForm extends React.Component {
       west: this.state.west
     });
   }
+
   handleEastPaymentChange(eastPayment) {
     this.setState({
       east: eastPayment
     });
   }
+
   handleWestPaymentChange(westPayment) {
     this.setState({
       west: westPayment
     });
   }
+
   render() {
     return (
       <div className="PaymentForm">
@@ -64,13 +57,23 @@ window.PaymentForm = class PaymentForm extends React.Component {
           </label>
         </div>
         <div>
-          <button onClick={this.handleButtonClick.bind(this, Action.BUILD)}>Build</button>
-          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, Action.BUILD_WONDER)}>Build Wonder</button>
-          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, Action.DISCARD)}>Discard</button>
+          <button onClick={this.handleButtonClick.bind(this, PaymentForm.Action.BUILD)}>Build</button>
+          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, PaymentForm.Action.BUILD_WONDER)}>Build Wonder</button>
+          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, PaymentForm.Action.DISCARD)}>Discard</button>
         </div>
       </div>
     );
   }
 };
 
-})();
+PaymentForm.Action = {
+  BUILD: 0,
+  BUILD_WONDER: 1,
+  DISCARD: 2
+};
+
+PaymentForm.propTypes = {
+  east: React.PropTypes.object.isRequired,
+  onSubmit: React.PropTypes.func.isRequired,
+  west: React.PropTypes.object.isRequired
+};

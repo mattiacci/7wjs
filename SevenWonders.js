@@ -1872,54 +1872,36 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     }
     this.field.style.padding = '15px';
 
-    // cards
-    if (this.isLocal) {
-      this.currHand.forEach(function(card) {
-        card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-        card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-      }, this);
-      var selectedCardIndex = this.currHand.indexOf(this.card);
+    this.currHand.forEach(function(card) {
+      card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+      card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
+    }, this);
 
-      var hand = document.createElement('div');
-      this.field.appendChild(hand);
-      var handFactory = React.createFactory(Hand);
-      ReactDOM.render(
-        handFactory({
-          cards: this.currHand,
-          onSelect: function(index) {
-            playerInterface.card = playerInterface.currHand[index];
-          },
-          selected: selectedCardIndex
-        }),
-        hand
-      );
-
-      var paymentEl = document.createElement('div');
-      this.field.appendChild(paymentEl);
-      ReactDOM.render(
-        React.createFactory(PaymentForm)({
-          east: this.currTurn.playerState.east,
-          onSubmit: function(action, payment) {
-            if (turnsRef) {
-              turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
-            } else {
-              console.warn('No turnsRef');
-              playerInterface.currTurn.play(action, playerInterface.card, payment);
-            }
-          },
-          west: this.currTurn.playerState.west
-        }),
-        paymentEl
-      );
-    }
-
-    var container = document.createElement('div');
-    this.field.appendChild(container);
+    var playerUI = document.createElement('div');
+    this.field.appendChild(playerUI);    
     ReactDOM.render(
-      React.createFactory(PlayerField)({
+      React.createFactory(PlayerUI)({
         battleTokens: this.currTurn.playerState.battleTokens,
-        cards: this.currTurn.playerState.built,
+        built: this.currTurn.playerState.built,
         gold: this.currTurn.playerState.gold,
+        hand: this.currHand,
+        initiallySelectedCard: this.currHand.indexOf(this.card),
+        onSelect: function(index) {
+          playerInterface.card = playerInterface.currHand[index];
+        },
+        onSubmit: function(action, payment) {
+          if (turnsRef) {
+            turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
+          } else {
+            console.warn('No turnsRef');
+            playerInterface.currTurn.play(action, playerInterface.card, payment);
+          }
+        },
+        payment: {
+          east: this.currTurn.playerState.east,
+          west: this.currTurn.playerState.west
+        },
+        playable: this.isLocal,
         wonder: {
           isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
           built: this.isLocal ?
@@ -1930,7 +1912,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
           stageCount: this.currTurn.playerState.board.stages.length
         }
       }),
-      container
+      playerUI
     );
 
     this.field.style.border = '1px solid black';

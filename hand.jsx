@@ -16,7 +16,7 @@ window.Hand = class Hand extends React.Component {
   render() {
     const cards = this.props.cards.map(function(card, i) {
       return (
-        <div data-index={i} key={i} style={{display: 'inline-block'}} onClick={this.handleCardClick}>
+        <div data-index={i} key={i} style={{display: 'inline-block'}} onClick={this.handleCardClick.bind(this)}>
           <Card data={card} selected={i == this.state.selected} unplayable={card.unplayable} free={card.free}/>
         </div>
       );

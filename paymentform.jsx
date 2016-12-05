@@ -44,16 +44,16 @@ window.PaymentForm = class PaymentForm extends React.Component {
         }}>
           <div>
             Purchase from western (left) neighbor:
-            <ResourcePicker multi={this.props.west.multiResources} single={this.props.west.resources} onSelectionChange={this.handleWestPaymentChange} />
+            <ResourcePicker multi={this.props.west.multiResources} single={this.props.west.resources} onSelectionChange={this.handleWestPaymentChange.bind(this)} />
           </div>
           <div style={{marginLeft: '1em'}}>
             Purchase from eastern (right) neighbor:
-            <ResourcePicker multi={this.props.east.multiResources} single={this.props.east.resources} onSelectionChange={this.handleEastPaymentChange} />
+            <ResourcePicker multi={this.props.east.multiResources} single={this.props.east.resources} onSelectionChange={this.handleEastPaymentChange.bind(this)} />
           </div>
         </div>
         <div style={{margin: '.5em 0'}}>
           <label>
-            <input type="checkbox" checked={!!this.state.bank} onChange={this.handleBankChange} /> Pay bank
+            <input type="checkbox" checked={!!this.state.bank} onChange={this.handleBankChange.bind(this)} /> Pay bank
           </label>
         </div>
         <div>

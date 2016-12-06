@@ -1803,7 +1803,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   undo.onclick = function() {
     turnsRef.push({id: id, action: Action.UNDO});
   };
-  
+
   this.doneBox = document.createElement('div');
   this.doneBox.style.display = 'block';
   this.doneBox.style.height = '100%';
@@ -1848,7 +1848,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
-        if (!success && this.loaded) {
+        if (!success && this.loaded && this.isLocal) {
           alert('You have made a mistake! Try again...');
         }
       }
@@ -1857,12 +1857,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
       }
     }
   };
-
-  window.setTimeout(function(ui) {
-    return function() {
-      ui.loaded = true;
-    };
-  }(playerInterface), 2000);
 
   this.draw = function() {
     console.log('draw start');
@@ -1878,7 +1872,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     }, this);
 
     var playerUI = document.createElement('div');
-    this.field.appendChild(playerUI);    
+    this.field.appendChild(playerUI);
     ReactDOM.render(
       React.createFactory(PlayerUI)({
         battleTokens: this.currTurn.playerState.battleTokens,
@@ -1938,6 +1932,9 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   }
 
   this.notify = function(msg) {
+    if (!this.isLocal) {
+      return;
+    }
     if (!('Notification' in window)) {
       alert(msg);
     } else if (Notification.permission === 'granted') {

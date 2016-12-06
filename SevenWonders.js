@@ -1706,9 +1706,8 @@ var SevenWonders = function() {
           if (this.players[i].canDoubleBuild && this.hands[this.age][i].length == 1) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
-              if (this.playerInterfaces[j].preventUndo) {
-                this.playerInterfaces[j].preventUndo();
-              }
+              this.playerInterfaces[j].allowUndo = false;
+              this.playerInterfaces[j].draw();
             }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
             return;
@@ -1721,7 +1720,7 @@ var SevenWonders = function() {
         for (var i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
-            this.playerInterfaces[i].drawDone();
+            this.playerInterfaces[i].draw();
           }
         }
       }
@@ -1733,9 +1732,8 @@ var SevenWonders = function() {
           if (this.discarded.length > 0) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
-              if (this.playerInterfaces[j].preventUndo) {
-                this.playerInterfaces[j].preventUndo();
-              }
+              this.playerInterfaces[j].allowUndo = false;
+              this.playerInterfaces[j].draw();
             }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
             return;
@@ -1780,6 +1778,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.id = id;
   this.isLocal = isLocal;
   this.field = field;
+  this.allowUndo = false;
   this.currHand = [];
   this.currTurn = null;
   this.currTurnEnded = true;
@@ -1797,28 +1796,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
       ui.loaded = true;
     };
   }(playerInterface), 2000);
-
-  var undo = document.createElement('button');
-  undo.innerHTML = "UNDO";
-  undo.onclick = function() {
-    turnsRef.push({id: id, action: Action.UNDO});
-  };
-
-  this.doneBox = document.createElement('div');
-  this.doneBox.style.display = 'block';
-  this.doneBox.style.height = '100%';
-  this.doneBox.style.width = '100%';
-  this.doneBox.style.position = 'absolute';
-  this.doneBox.style.left = 0;
-  this.doneBox.style.top = 0;
-  this.doneBox.innerHTML = this.isLocal ? 'WAITING FOR OTHER PLAYERS' : 'DONE';
-  if (this.isLocal) {
-    this.doneBox.appendChild(undo);
-  }
-  this.doneBox.style.textAlign = 'center';
-  this.doneBox.style.background = this.isLocal ? 'rgba(255, 196, 0, 0.4)' : 'rgba(128, 255, 128, 0.4)';
-  this.doneBox.style.color = this.isLocal ? 'white' : 'grey';
-  this.doneBox.style.textShadow = '-2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, -1px -1px black, 1px -1px black, -1px 1px black, 1px 1px black';
 
   this.process = function() {
     console.log(this.name, 'processing', this.currTurn, this.pendingTurns);
@@ -1844,7 +1821,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
           this.draw();
         } else {
           this.currTurnEnded = true;
-          this.drawDone();
+          this.draw();
         }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
@@ -1874,6 +1851,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         age: this.currTurn.age,
         battleTokens: this.currTurn.playerState.battleTokens,
         built: this.currTurn.playerState.built,
+        canUndo: this.allowUndo,
         gold: this.currTurn.playerState.gold,
         hand: this.currHand,
         initiallySelectedCard: this.currHand.indexOf(this.card),
@@ -1888,6 +1866,9 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
             playerInterface.currTurn.play(action, playerInterface.card, payment);
           }
         },
+        onUndo: function() {
+          turnsRef.push({id: id, action: Action.UNDO});
+        },
         name: this.name,
         payment: {
           east: this.currTurn.playerState.east,
@@ -1895,6 +1876,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         },
         playable: this.isLocal,
         score: this.currTurn.playerState.scoreTotal,
+        waiting: this.currTurnEnded,
         wonder: {
           isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
           built: this.isLocal ?
@@ -1909,13 +1891,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     );
 
     console.log('draw done');
-  };
-
-  this.drawDone = function() {
-    this.field.style.position = 'relative';
-    this.doneBox.style.lineHeight = this.field.offsetHeight + 'px';
-    this.doneBox.style.fontSize = this.field.offsetWidth / (this.isLocal ? 20 : 10) + 'px';
-    this.field.appendChild(this.doneBox);
   };
 
   this.endGame = function(turn) {
@@ -1952,17 +1927,13 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     if (this.loaded) {
       this.notify('It is your turn to play in Seven Wonders!');
     }
-    undo.disabled = false;
+    this.allowUndo = true;
     this.currHand = hand;
     this.currTurn = turn;
     this.currTurnEnded = false;
     console.log(this.name, 'drawing');
     this.draw();
     this.process();
-  };
-
-  this.preventUndo = function() {
-    undo.disabled = true;
   };
 
 };

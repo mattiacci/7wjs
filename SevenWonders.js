@@ -1860,21 +1860,18 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
 
   this.draw = function() {
     console.log('draw start');
-    this.field.innerHTML = '<h3 style="display: inline-block; margin: 0 1em .5em 0">' + (this.currTurn.age % 2 ? '' : '&lt; ') + this.name + (this.currTurn.age % 2 ? ' &gt;' : '') + '</h3>Current Score: <b>' + this.currTurn.playerState.scoreTotal + '</b>';
-    if (!this.isLocal) {
-      this.field.style.background = 'rgba(0,0,0,0.2)';
-    }
-    this.field.style.padding = '15px';
+    this.field.style.display = 'flex';
+    // TODO: Figure out why ckearing the content this is necessary. drawDone, maybe?
+    this.field.innerHTML = '';
 
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
       card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
     }, this);
 
-    var playerUI = document.createElement('div');
-    this.field.appendChild(playerUI);
     ReactDOM.render(
       React.createFactory(PlayerUI)({
+        age: this.currTurn.age,
         battleTokens: this.currTurn.playerState.battleTokens,
         built: this.currTurn.playerState.built,
         gold: this.currTurn.playerState.gold,
@@ -1891,11 +1888,13 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
             playerInterface.currTurn.play(action, playerInterface.card, payment);
           }
         },
+        name: this.name,
         payment: {
           east: this.currTurn.playerState.east,
           west: this.currTurn.playerState.west
         },
         playable: this.isLocal,
+        score: this.currTurn.playerState.scoreTotal,
         wonder: {
           isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
           built: this.isLocal ?
@@ -1906,10 +1905,8 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
           stageCount: this.currTurn.playerState.board.stages.length
         }
       }),
-      playerUI
+      this.field
     );
-
-    this.field.style.border = '1px solid black';
 
     console.log('draw done');
   };

@@ -1836,10 +1836,8 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   };
 
   this.draw = function() {
-    console.log('draw start');
+    console.log(this.name, 'draw start');
     this.field.style.display = 'flex';
-    // TODO: Figure out why ckearing the content this is necessary. drawDone, maybe?
-    this.field.innerHTML = '';
 
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
@@ -1890,7 +1888,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
       this.field
     );
 
-    console.log('draw done');
+    console.log(this.name, 'draw done');
   };
 
   this.endGame = function(turn) {

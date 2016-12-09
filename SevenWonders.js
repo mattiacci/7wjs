@@ -1842,6 +1842,9 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     if (this.overlay.parentNode == this.field) {
       this.field.removeChild(this.overlay);
     }
+    // TODO: Handle "onSubmit" in React form itself, so we can stop redrawing completely every time.
+    this.field.innerHTML = '';
+
 
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);

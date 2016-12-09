@@ -1373,6 +1373,8 @@ var GameRoom = function(appContainer, gameField) {
         var interfaces = [];
         var turnsRef = self.server.child(gameName).child('turns');
         var playerField = document.createElement('div');
+        playerField.style.display = 'flex';
+        playerField.style.position = 'relative';
         var playerInterface = new PlayerInterface(playerField, turnsRef, id, game.players[id], true  /* isLocal */);
         var fields = [];
         for (var i = 0; i < game.numPlayers; i++) {
@@ -1381,6 +1383,8 @@ var GameRoom = function(appContainer, gameField) {
             fields.push(playerField);
           } else {
             var remotePlayerField = document.createElement('div');
+            remotePlayerField.style.display = 'flex';
+            remotePlayerField.style.position = 'relative';
             fields.push(remotePlayerField);
             var remotePlayerInterface = new PlayerInterface(remotePlayerField, turnsRef, i, game.players[i]);
             interfaces.push(remotePlayerInterface);
@@ -1398,12 +1402,8 @@ var GameRoom = function(appContainer, gameField) {
           'use strict';
           var turn = snapshot.val();
           var interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
-          for (var i = 0; i < interfaces.length; i++) {
-            if (i == interfaceIndex) {
-              interfaces[i].pendingTurns.push(turn);
-              interfaces[i].process();
-            }
-          }
+          interfaces[interfaceIndex].pendingTurns.push(turn);
+          interfaces[interfaceIndex].process();
         });
 
         self.currGame = new SevenWonders(interfaces, boards, hands, snapshot.name().indexOf('wreck') == 0, self.endGame.bind(self, gameName));
@@ -1707,7 +1707,7 @@ var SevenWonders = function() {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
               this.playerInterfaces[j].allowUndo = false;
-              this.playerInterfaces[j].draw();
+              this.playerInterfaces[j].drawOverlay();
             }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
             return;
@@ -1720,7 +1720,7 @@ var SevenWonders = function() {
         for (var i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
-            this.playerInterfaces[i].draw();
+            this.playerInterfaces[i].drawOverlay();
           }
         }
       }
@@ -1733,7 +1733,7 @@ var SevenWonders = function() {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
               this.playerInterfaces[j].allowUndo = false;
-              this.playerInterfaces[j].draw();
+              this.playerInterfaces[j].drawOverlay();
             }
             this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
             return;
@@ -1789,6 +1789,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.pendingTurns = [];
   this.loaded = false;
   this.name = name;
+  this.overlay = document.createElement('div');
   var playerInterface = this;
 
   window.setTimeout(function(ui) {
@@ -1821,7 +1822,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
           this.draw();
         } else {
           this.currTurnEnded = true;
-          this.draw();
+          this.drawOverlay();
         }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
@@ -1837,7 +1838,10 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
 
   this.draw = function() {
     console.log(this.name, 'draw start');
-    this.field.style.display = 'flex';
+
+    if (this.overlay.parentNode == this.field) {
+      this.field.removeChild(this.overlay);
+    }
 
     this.currHand.forEach(function(card) {
       card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
@@ -1849,7 +1853,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         age: this.currTurn.age,
         battleTokens: this.currTurn.playerState.battleTokens,
         built: this.currTurn.playerState.built,
-        canUndo: this.allowUndo,
         gold: this.currTurn.playerState.gold,
         hand: this.currHand,
         initiallySelectedCard: this.currHand.indexOf(this.card),
@@ -1864,9 +1867,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
             playerInterface.currTurn.play(action, playerInterface.card, payment);
           }
         },
-        onUndo: function() {
-          turnsRef.push({id: id, action: Action.UNDO});
-        },
         name: this.name,
         payment: {
           east: this.currTurn.playerState.east,
@@ -1874,7 +1874,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         },
         playable: this.isLocal,
         score: this.currTurn.playerState.scoreTotal,
-        waiting: this.currTurnEnded,
         wonder: {
           isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
           built: this.isLocal ?
@@ -1889,6 +1888,27 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     );
 
     console.log(this.name, 'draw done');
+  };
+
+  this.drawOverlay = function() {
+    console.log(this.name, 'drawOverlay');
+    const undoDisabled = this.allowUndo ? '' : 'disabled';
+    this.overlay.innerHTML = this.isLocal ? `
+      <div class="waiting-overlay" style="background: rgba(255, 196, 0, 0.4); color: white; font-size: 25px">
+        Waiting for other players
+        <button class="undo" ${undoDisabled}>Undo</button>
+      </div>` : `
+      <div class="waiting-overlay" style="background: rgba(128, 255, 128, 0.4); color: grey; font-size: 50px">
+        Done
+      </div>`;
+    this.field.appendChild(this.overlay);
+    var undoButton = this.overlay.querySelector('.undo');
+    if (undoButton) {
+      undoButton.onclick = function() {
+        turnsRef.push({id: id, action: Action.UNDO});
+      };
+    }
+    console.log(this.name, 'drawOverlay done');
   };
 
   this.endGame = function(turn) {

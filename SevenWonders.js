@@ -1706,6 +1706,7 @@ var SevenWonders = function() {
           if (this.players[i].canDoubleBuild && this.hands[this.age][i].length == 1) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
+              this.playerInterfaces[j].draw();
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].drawOverlay();
             }
@@ -1720,6 +1721,8 @@ var SevenWonders = function() {
         for (var i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
+            // Probably not necessary.
+            this.playerInterfaces[i].draw();
             this.playerInterfaces[i].drawOverlay();
           }
         }
@@ -1732,6 +1735,7 @@ var SevenWonders = function() {
           if (this.discarded.length > 0) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
+              this.playerInterfaces[j].draw();
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].drawOverlay();
             }

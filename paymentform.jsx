@@ -32,6 +32,7 @@ window.PaymentForm = class PaymentForm extends React.Component {
         west: this.state.west.filter(isFinite)
       }
     });
+    this.resetState();
   }
 
   handleCardSelection(index) {
@@ -50,6 +51,16 @@ window.PaymentForm = class PaymentForm extends React.Component {
   handleWestPaymentChange(westPayment) {
     this.setState({
       west: westPayment
+    });
+  }
+
+  resetState() {
+    this.setState({
+      bank: 0,
+      card: null,
+      cardIndex: -1,
+      east: [],
+      west: []
     });
   }
 

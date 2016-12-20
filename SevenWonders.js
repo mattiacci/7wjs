@@ -1371,11 +1371,11 @@ var GameRoom = function(appContainer, gameField) {
         var boards = game.boards;
         var hands = game.hands;
         var interfaces = [];
-        var turnsRef = self.server.child(gameName).child('turns');
+        var gameState = self.server.child(gameName);
         var playerField = document.createElement('div');
         playerField.style.display = 'flex';
         playerField.style.position = 'relative';
-        var playerInterface = new PlayerInterface(playerField, turnsRef, id, game.players[id], true  /* isLocal */);
+        var playerInterface = new PlayerInterface(playerField, gameState, id, game.players[id], true  /* isLocal */);
         var fields = [];
         for (var i = 0; i < game.numPlayers; i++) {
           if (i == id) {
@@ -1386,7 +1386,7 @@ var GameRoom = function(appContainer, gameField) {
             remotePlayerField.style.display = 'flex';
             remotePlayerField.style.position = 'relative';
             fields.push(remotePlayerField);
-            var remotePlayerInterface = new PlayerInterface(remotePlayerField, turnsRef, i, game.players[i]);
+            var remotePlayerInterface = new PlayerInterface(remotePlayerField, gameState, i, game.players[i]);
             interfaces.push(remotePlayerInterface);
           }
         }
@@ -1398,7 +1398,7 @@ var GameRoom = function(appContainer, gameField) {
         }
 
         // Handle any new game action (e.g. card being built)
-        turnsRef.on('child_added', function(snapshot) {
+        gameState.child('turns').on('child_added', function(snapshot) {
           'use strict';
           var turn = snapshot.val();
           var interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
@@ -1418,15 +1418,15 @@ var GameRoom = function(appContainer, gameField) {
         var boards = self.getBoards(numPlayers);
         var hands = self.getHands(numPlayers);
         var interfaces = [];
-        var turnsRef = self.server.child(gameName).child('turns');
+        var gameState = self.server.child(gameName);
         var playerField = document.createElement('div');
         self.gameField.appendChild(playerField);
-        var playerInterface = new PlayerInterface(playerField, turnsRef, 0, name, true /* isLocal */);
+        var playerInterface = new PlayerInterface(playerField, gameState, 0, name, true /* isLocal */);
         interfaces.push(playerInterface);
         for (var i = 1; i < numPlayers; i++) {
           var remotePlayerField = document.createElement('div');
           self.gameField.appendChild(remotePlayerField);
-          var remotePlayerInterface = new PlayerInterface(remotePlayerField, turnsRef, i, 'Open slot');
+          var remotePlayerInterface = new PlayerInterface(remotePlayerField, gameState, i, 'Open slot');
           interfaces.push(remotePlayerInterface);
         }
         self.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') == 0, self.endGame.bind(self, gameName));
@@ -1778,7 +1778,11 @@ var SevenWonders = function() {
   }
 };
 
-var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
+var PlayerInterface = function(field, gameState, id, name, isLocal) {
+  if (!field || !gameState) {
+    console.error('PlayerInterface missing required data');
+    return;
+  }
   this.id = id;
   this.isLocal = isLocal;
   this.field = field;
@@ -1788,7 +1792,6 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
   this.currTurnEnded = true;
   this.playedTurn;
   this.action;
-  this.card;
   this.payment;
   this.pendingTurns = [];
   this.loaded = false;
@@ -1860,20 +1863,10 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
         age: this.currTurn.age,
         battleTokens: this.currTurn.playerState.battleTokens,
         built: this.currTurn.playerState.built,
+        gameState: gameState,
         gold: this.currTurn.playerState.gold,
         hand: this.currHand,
-        initiallySelectedCard: this.currHand.indexOf(this.card),
-        onSelect: function(index) {
-          playerInterface.card = playerInterface.currHand[index];
-        },
-        onSubmit: function(action, payment) {
-          if (turnsRef) {
-            turnsRef.push({id: id, action: action, card: {name: playerInterface.card.name, minPlayers: playerInterface.card.minPlayers, age: playerInterface.card.age}, payment: payment});
-          } else {
-            console.warn('No turnsRef');
-            playerInterface.currTurn.play(action, playerInterface.card, payment);
-          }
-        },
+        id: this.id,
         name: this.name,
         payment: {
           east: this.currTurn.playerState.east,
@@ -1912,7 +1905,7 @@ var PlayerInterface = function(field, turnsRef, id, name, isLocal) {
     var undoButton = this.overlay.querySelector('.undo');
     if (undoButton) {
       undoButton.onclick = function() {
-        turnsRef.push({id: id, action: Action.UNDO});
+        gameState.child('turns').push({id: id, action: Action.UNDO});
       };
     }
     console.log(this.name, 'drawOverlay done');

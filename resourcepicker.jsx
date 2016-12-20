@@ -17,9 +17,10 @@ Object.keys(Resource).forEach(function(key) {
 
 window.ResourcePicker = React.createClass({
   propTypes: {
-    multi: React.PropTypes.array,
-    onSelectionChange: React.PropTypes.func,
-    single: React.PropTypes.object,
+    multi: React.PropTypes.array.isRequired,
+    onSelectionChange: React.PropTypes.func.isRequired,
+    selected: React.PropTypes.array.isRequired,
+    single: React.PropTypes.object.isRequired,
   },
   getDefaultProps: function() {
     return {
@@ -27,16 +28,10 @@ window.ResourcePicker = React.createClass({
       single: []
     };
   },
-  getInitialState: function() {
-    return {
-      selected: []
-    };
-  },
-  handleResourceChange: function(index, value, e) {
-    var selected = this.state.selected;
+  handleSelectionChange: function(index, value, e) {
+    var selected = this.props.selected.slice();
     selected[index] = value === selected[index] ? undefined : value;
-    this.setState({ selected: selected });
-    this.props.onSelectionChange(selected.filter(isFinite));
+    this.props.onSelectionChange(selected);
   },
   render: function() {
     var single = [], multi = [], index = 0;
@@ -44,12 +39,12 @@ window.ResourcePicker = React.createClass({
       var value = Resource[resourceName];
       var amount = this.props.single[value];
       for (var i = 0; i < amount; i++) {
-        var selected = isFinite(this.state.selected[index]);
+        var selected = isFinite(this.props.selected[index]);
         single.push(
           <div key={index} style={{
             display: 'inline-block',
           }}>
-            <ResourceButton resource={resourceName} selected={selected} onButtonClick={this.handleResourceChange.bind(this, index, value)} />
+            <ResourceButton resource={resourceName} selected={selected} onButtonClick={this.handleSelectionChange.bind(this, index, value)} />
           </div>
         );
         single.push(<span key={'space' + index}> </span>);
@@ -63,12 +58,12 @@ window.ResourcePicker = React.createClass({
     });
     for (var i = 0; i < multiResources.length; i++) {
       var m = multiResources[i];
-      var selectedLeft = this.state.selected[index] === m[0];
-      var selectedRight = this.state.selected[index] === m[1];
+      var selectedLeft = this.props.selected[index] === m[0];
+      var selectedRight = this.props.selected[index] === m[1];
       multi.push(
         <div className="multi" key={index}>
-          <ResourceButton resource={ResourceFromNumber[m[0]]} selected={selectedLeft} onButtonClick={this.handleResourceChange.bind(this, index, m[0])} />
-          <ResourceButton resource={ResourceFromNumber[m[1]]} selected={selectedRight} onButtonClick={this.handleResourceChange.bind(this, index, m[1])} />
+          <ResourceButton resource={ResourceFromNumber[m[0]]} selected={selectedLeft} onButtonClick={this.handleSelectionChange.bind(this, index, m[0])} />
+          <ResourceButton resource={ResourceFromNumber[m[1]]} selected={selectedRight} onButtonClick={this.handleSelectionChange.bind(this, index, m[1])} />
         </div>
       );
       single.push(<span key={'space' + index}> </span>);

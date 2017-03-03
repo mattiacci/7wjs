@@ -1022,7 +1022,7 @@ var verify = function(player, card, payment) {
         for (var j = 0; j < payment.east.length; j++) {
           goldNeeded += player.tradeCost[resourceType(payment.east[j], true)];
         }
-        for (var j = 0; j < payment.west[j]; j++) {
+        for (var j = 0; j < payment.west.length; j++) {
           goldNeeded += player.tradeCost[resourceType(payment.west[j], false)];
         }
 

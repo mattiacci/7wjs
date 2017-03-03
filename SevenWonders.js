@@ -1019,11 +1019,11 @@ var verify = function(player, card, payment) {
 
         // check if enough gold to pay neighbours
         var goldNeeded = 0;
-        for (var j = 0, resource; resource = payment.east[j]; j++) {
-          goldNeeded += player.tradeCost[resourceType(resource, true)];
+        for (var j = 0; j < payment.east.length; j++) {
+          goldNeeded += player.tradeCost[resourceType(payment.east[j], true)];
         }
-        for (var j = 0, resource; resource = payment.west[j]; j++) {
-          goldNeeded += player.tradeCost[resourceType(resource, false)];
+        for (var j = 0; j < payment.west[j]; j++) {
+          goldNeeded += player.tradeCost[resourceType(payment.west[j], false)];
         }
 
         // Must not pay bank unnecessarily.

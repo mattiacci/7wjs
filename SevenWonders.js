@@ -1888,6 +1888,13 @@ var PlayerInterface = function(field, gameState, id, name, isLocal) {
     console.log(this.name, 'draw done');
   };
 
+  /**
+   * drawOverlay still exists and doesn't use React only because playerStates
+   * have been updated when calling this function, which can reveal what a
+   * player has built before the turn ends.
+   * TODO: Ensure drawOverlay is called with same state as most recent draw
+   *     call.
+   */
   this.drawOverlay = function() {
     console.log(this.name, 'drawOverlay');
     const undoDisabled = this.allowUndo ? '' : 'disabled';

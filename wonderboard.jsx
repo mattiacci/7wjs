@@ -18,7 +18,7 @@ window.WonderBoard = function(props) {
     var path = window.ASSET_URL_PREFIX + 'Assets/Age ';
     if (cardOrAge.age) {
       return (
-        <div className="back-container" style={{left: start + delta * i}}>
+        <div key={i} className="back-container" style={{left: start + delta * i}}>
           <div className="back" style={{
             backgroundImage: 'url("' + path + cardOrAge.age + '/Back.jpg")'
           }} />
@@ -29,7 +29,7 @@ window.WonderBoard = function(props) {
       );
     } else {
       return (
-        <div className="back" style={{
+        <div key={i} className="back" style={{
           backgroundImage: 'url("' + path + cardOrAge + '/Back.jpg")',
           left: start + delta * i
         }} />

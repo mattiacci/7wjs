@@ -127,14 +127,6 @@ var PlayerState = function(board, side, playerInterface) {
   this.scoreTotal = 0;
 
   this.resources[this.board.resource]++;
-
-  this.setEasternNeighbour = function(player) {
-    this.east = player;
-  };
-
-  this.setWesternNeighbour = function(player) {
-    this.west = player;
-  };
 };
 
 var scienceReward = function(science) {
@@ -618,8 +610,8 @@ var clonePlayers = function(players) {
 
   // Clockface
   for (var i = 0, player; player = clonedPlayers[i]; i++) {
-    player.setEasternNeighbour(clonedPlayers[(i + clonedPlayers.length - 1) % clonedPlayers.length]);
-    player.setWesternNeighbour(clonedPlayers[(i + clonedPlayers.length + 1) % clonedPlayers.length]);
+    player.east = clonedPlayers[(i + clonedPlayers.length - 1) % clonedPlayers.length];
+    player.west = clonedPlayers[(i + clonedPlayers.length + 1) % clonedPlayers.length];
   }
 
   return clonedPlayers;
@@ -1119,6 +1111,7 @@ var Payment = function(east, west, bank) {
 
 var Turn = function(player, game, hands, index, free) {
   this.playerState = player;
+  this.game = game;
   this.free = free;
   this.age = game.age;
   this.played = false;
@@ -1372,29 +1365,14 @@ var GameRoom = function(appContainer, gameField) {
         var hands = game.hands;
         var interfaces = [];
         var gameState = self.server.child(gameName);
-        var playerField = document.createElement('div');
-        playerField.style.display = 'flex';
-        playerField.style.position = 'relative';
-        var playerInterface = new PlayerInterface(playerField, gameState, id, game.players[id], true  /* isLocal */);
-        var fields = [];
+        var playerInterface = new PlayerInterface(self.gameField, gameState, id, game.players[id], true  /* isLocal */);
         for (var i = 0; i < game.numPlayers; i++) {
           if (i == id) {
             interfaces.push(playerInterface);
-            fields.push(playerField);
           } else {
-            var remotePlayerField = document.createElement('div');
-            remotePlayerField.style.display = 'flex';
-            remotePlayerField.style.position = 'relative';
-            fields.push(remotePlayerField);
-            var remotePlayerInterface = new PlayerInterface(remotePlayerField, gameState, i, game.players[i]);
+            var remotePlayerInterface = new PlayerInterface(self.gameField, gameState, i, game.players[i]);
             interfaces.push(remotePlayerInterface);
           }
-        }
-
-        // Insert fields in an order that put the active player in the center
-        var startIndex = id - Math.floor(game.numPlayers / 2);
-        for (var i = 0; i < game.numPlayers; i++) {
-          self.gameField.appendChild(fields[(i + startIndex + game.numPlayers) % game.numPlayers]);
         }
 
         // Handle any new game action (e.g. card being built)
@@ -1419,6 +1397,7 @@ var GameRoom = function(appContainer, gameField) {
         var hands = self.getHands(numPlayers);
         var interfaces = [];
         var gameState = self.server.child(gameName);
+        // TODO: Remove unnecessary playerField and remotePlayerField elements.
         var playerField = document.createElement('div');
         self.gameField.appendChild(playerField);
         var playerInterface = new PlayerInterface(playerField, gameState, 0, name, true /* isLocal */);
@@ -1514,8 +1493,8 @@ var SevenWonders = function() {
 
     // Clockface
     for (var i = 0, player; player = this.players[i]; i++) {
-      player.setEasternNeighbour(this.players[(i + len - 1) % len]);
-      player.setWesternNeighbour(this.players[(i + len + 1) % len]);
+      player.east = this.players[(i + len - 1) % len];
+      player.west = this.players[(i + len + 1) % len];
     }
 
     // Setup cards
@@ -1575,13 +1554,103 @@ var SevenWonders = function() {
     this.start();
   };
 
+  /**
+   * Returns a serializable copy of the game state, containing only what's
+   * visible to the given player.
+  */
+  this.getKnownGameStateForPlayer = function(playerState) {
+    const state = JSON.parse(JSON.stringify(this.cachedPublicGameState));
+
+    const hand = JSON.parse(JSON.stringify(playerState.playerInterface.currHand));
+    const turn = playerState.playerInterface.currTurn;
+    // Add data to cards in hand.
+    hand.forEach(function(card) {
+      card.unplayable = !canPlay(
+          playerState,
+          card,
+          turn.free || playerState.canBuildForFree[turn.age]);
+      card.free = isFree(
+          playerState,
+          card,
+          turn.free || playerState.canBuildForFree[turn.age]);
+    });
+
+    // Update waiting state of players.
+    for (let i = 0; i < state.players.length; i++) {
+      state.players[i].waiting = this.playerInterfaces[i].currTurnEnded;
+    }
+    // Rearrange players so given player comes first.
+    const rearrangedPlayers = [];
+    for (let i = playerState.playerInterface.id; i < state.players.length; i++) {
+      rearrangedPlayers.push(state.players[i]);
+    }
+    for (let i = 0; i < playerState.playerInterface.id; i++) {
+      rearrangedPlayers.push(state.players[i]); 
+    }
+
+    // Update state object with current data.
+    state.players = rearrangedPlayers;
+    state.players[0].built = JSON.parse(JSON.stringify(playerState.built));
+    state.players[0].cardsInHand = hand;
+    state.players[0].wonder.built =
+        JSON.parse(JSON.stringify(playerState.stagesBuilt));
+    return state;
+  };
+
+  this.cachePublicGameState = function() {
+    const players = this.players.map(function(playerState) {
+      return {
+        battleTokens: playerState.battleTokens,
+        built: playerState.built,
+        gold: playerState.gold,
+        id: playerState.playerInterface.id,
+        name: playerState.playerInterface.name,
+        // TODO: Remove this, as presence of cards-in-hand or actions is enough.
+        playable: playerState.playerInterface.isLocal,
+        resources: {
+          east: {
+            single: playerState.east.resources,
+            multi: playerState.east.multiResources
+          },
+          single: playerState.resources,
+          multi: playerState.multiResources,
+          west: {
+            single: playerState.west.resources,
+            multi: playerState.west.multiResources
+          }
+        },
+        score: playerState.scoreTotal,
+        waiting: playerState.playerInterface.currTurnEnded,
+        wonder: {
+          isLast: playerState.built.length > 0 &&
+              playerState.built[playerState.built.length - 1].type == CardType.WONDER,
+          built: playerState.stagesBuilt.map(function(card) { return card.age; }),
+          name: playerState.board.name,
+          side: playerState.side,
+          stageCount: playerState.board.stages.length
+        }
+      };
+    });
+    this.cachedPublicGameState = JSON.parse(JSON.stringify({
+      game: {
+        age: this.age
+      },
+      players: players
+    }));
+    return this.cachedPublicGameState;
+  };
+
   this.playRound = function() {
     console.log('playRound');
     console.log(this.hands, this.age, this.numPlayers);
     this.updateCurrentScores();
     for (var i = 0; i < this.numPlayers; i++) {
       console.log(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
-      this.playerInterfaces[i].play(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
+      this.playerInterfaces[i].update(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
+    }
+    this.cachePublicGameState();
+    for (var i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].play();
     }
   };
 
@@ -1707,11 +1776,11 @@ var SevenWonders = function() {
           if (this.players[i].canDoubleBuild && this.hands[this.age][i].length == 1) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
-              this.playerInterfaces[j].draw();
               this.playerInterfaces[j].allowUndo = false;
-              this.playerInterfaces[j].drawOverlay();
+              this.playerInterfaces[j].draw();
             }
-            this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
+            this.playerInterfaces[i].update(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
+            this.playerInterfaces[i].play();
             return;
           }
         }
@@ -1724,7 +1793,6 @@ var SevenWonders = function() {
             this.discarded.push(this.hands[this.age][i][0]);
             // Probably not necessary.
             this.playerInterfaces[i].draw();
-            this.playerInterfaces[i].drawOverlay();
           }
         }
       }
@@ -1736,11 +1804,11 @@ var SevenWonders = function() {
           if (this.discarded.length > 0) {
             this.playersDone--;
             for (var j = 0; j < len; j++) {
-              this.playerInterfaces[j].draw();
               this.playerInterfaces[j].allowUndo = false;
-              this.playerInterfaces[j].drawOverlay();
+              this.playerInterfaces[j].draw();
             }
-            this.playerInterfaces[i].playBonus(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
+            this.playerInterfaces[i].update(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
+            this.playerInterfaces[i].play();
             return;
           }
         }
@@ -1779,14 +1847,14 @@ var SevenWonders = function() {
   }
 };
 
-var PlayerInterface = function(field, gameState, id, name, isLocal) {
-  if (!field || !gameState) {
+var PlayerInterface = function(gameField, gameState, id, name, isLocal) {
+  if (!gameField || !gameState) {
     console.error('PlayerInterface missing required data');
     return;
   }
   this.id = id;
   this.isLocal = isLocal;
-  this.field = field;
+  this.gameField = gameField;
   this.allowUndo = false;
   this.currHand = [];
   this.currTurn = null;
@@ -1823,14 +1891,21 @@ var PlayerInterface = function(field, gameState, id, name, isLocal) {
       var success = currTurn.play(turn.action, getCard(turn.card), turn.payment);
       console.log(this.name, 'checking if successful', success, this.currTurn, currTurn, this.currTurn == currTurn);
       if (success && this.currTurn == currTurn) {
-        console.log(this.name, 'setting turn to null');
-        // this.currTurn = null;
+        console.log(this.name, 'turn successful');
         if (isUndo) {
           this.currTurnEnded = false;
-          this.draw();
+          this.currTurn.game.playerInterfaces.forEach(function(player) {
+            if (player.currTurn) {
+              player.draw.call(player);
+            }
+          });
         } else {
           this.currTurnEnded = true;
-          this.drawOverlay();
+          this.currTurn.game.playerInterfaces.forEach(function(player) {
+            if (player.currTurn) {
+              player.draw.call(player);
+            }
+          });
         }
       } else {
         console.log('New round or PlayerInterface play turn not successful, try next turn.');
@@ -1845,75 +1920,61 @@ var PlayerInterface = function(field, gameState, id, name, isLocal) {
   };
 
   this.draw = function() {
-    console.log(this.name, 'draw start');
-
-    if (this.overlay.parentNode == this.field) {
-      this.field.removeChild(this.overlay);
+    if (!this.isLocal) {
+      return;
     }
 
-    this.currHand.forEach(function(card) {
-      card.unplayable = !canPlay(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-      card.free = isFree(this.currTurn.playerState, card, this.currTurn.free || this.currTurn.playerState.canBuildForFree[this.currTurn.age]);
-    }, this);
+    console.log(this.name, 'draw start');
+
+    const data = this.currTurn.game.getKnownGameStateForPlayer(
+        this.currTurn.playerState);
+    const actions = this.getActions();
 
     ReactDOM.render(
-      React.createFactory(PlayerUI)({
-        age: this.currTurn.age,
-        battleTokens: this.currTurn.playerState.battleTokens,
-        built: this.currTurn.playerState.built,
-        gameState: gameState,
-        gold: this.currTurn.playerState.gold,
-        hand: this.currHand,
-        id: this.id,
-        name: this.name,
-        payment: {
-          east: this.currTurn.playerState.east,
-          west: this.currTurn.playerState.west
-        },
-        playable: this.isLocal,
-        score: this.currTurn.playerState.scoreTotal,
-        wonder: {
-          isLast: this.currTurn.playerState.built.length > 0 && this.currTurn.playerState.built[this.currTurn.playerState.built.length - 1].type == CardType.WONDER,
-          built: this.isLocal ?
-              this.currTurn.playerState.stagesBuilt :
-              this.currTurn.playerState.stagesBuilt.map(function(card) { return card.age; }),
-          name: this.currTurn.playerState.board.name,
-          side: this.currTurn.playerState.side,
-          stageCount: this.currTurn.playerState.board.stages.length
-        }
+      React.createFactory(GameUI)({
+        data: data,
+        actions: actions
       }),
-      this.field
+      this.gameField
     );
 
     console.log(this.name, 'draw done');
   };
 
   /**
-   * drawOverlay still exists and doesn't use React only because playerStates
-   * have been updated when calling this function, which can reveal what a
-   * player has built before the turn ends.
-   * TODO: Ensure drawOverlay is called with same state as most recent draw
-   *     call.
+   * Returns an object with functions representing the various actions that can
+   * be taken in game.
    */
-  this.drawOverlay = function() {
-    console.log(this.name, 'drawOverlay');
-    const undoDisabled = this.allowUndo ? '' : 'disabled';
-    this.overlay.innerHTML = this.isLocal ? `
-      <div class="waiting-overlay" style="background: rgba(255, 196, 0, 0.4); color: white; font-size: 25px">
-        Waiting for other players
-        <button class="undo" ${undoDisabled}>Undo</button>
-      </div>` : `
-      <div class="waiting-overlay" style="background: rgba(128, 255, 128, 0.4); color: grey; font-size: 50px">
-        Done
-      </div>`;
-    this.field.appendChild(this.overlay);
-    var undoButton = this.overlay.querySelector('.undo');
-    if (undoButton) {
-      undoButton.onclick = function() {
-        gameState.child('turns').push({id: id, action: Action.UNDO});
+  this.getActions = function() {
+    if (this.currTurnEnded && this.allowUndo) {
+      return {
+        undo: (function() {
+          gameState.child('turns').push({id: this.id, action: Action.UNDO});
+        }).bind(this)
       };
+    } else if (!this.currTurnEnded) {
+      const act = (function(data, action) {
+        data = JSON.parse(JSON.stringify(data));
+        Object.assign(data, {
+          id: this.id,
+          action: action
+        });
+        gameState.child('turns').push(data);
+      }).bind(this);
+      return {
+        build: function(data) {
+          act(data, 0);
+        },
+        buildWonder: function(data) {
+          act(data, 1);
+        },
+        discard: function(data) {
+          act(data, 2);
+        }
+      };
+    } else {
+      return {};
     }
-    console.log(this.name, 'drawOverlay done');
   };
 
   this.endGame = function(turn) {
@@ -1946,7 +2007,13 @@ var PlayerInterface = function(field, gameState, id, name, isLocal) {
     }
   };
 
-  this.playBonus = this.play = function(hand, turn) {
+  this.play = function() {
+    console.log(this.name, 'drawing');
+    this.draw();
+    this.process();
+  };
+
+  this.update = function(hand, turn) {
     if (this.loaded) {
       this.notify('It is your turn to play in Seven Wonders!');
     }
@@ -1954,9 +2021,6 @@ var PlayerInterface = function(field, gameState, id, name, isLocal) {
     this.currHand = hand;
     this.currTurn = turn;
     this.currTurnEnded = false;
-    console.log(this.name, 'drawing');
-    this.draw();
-    this.process();
   };
 
 };

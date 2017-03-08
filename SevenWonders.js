@@ -81,7 +81,7 @@ var Scoring = {
   SCIENCE: 6
 };
 
-var Player = function(board, side, playerInterface) {
+var PlayerState = function(board, side, playerInterface) {
   this.sciences = {};
   this.sciences[Science.ACADEMICS] = 0;
   this.sciences[Science.ENGINEERING] = 0;
@@ -578,7 +578,7 @@ var WONDERS = [
 
 var clonePlayers = function(players) {
   var clonedPlayers = players.map(function(player) {
-    var clone = new Player(player.board, player.side, null /* not cloned */);
+    var clone = new PlayerState(player.board, player.side, null /* not cloned */);
 
     clone.sciences[Science.ACADEMICS] = player.sciences[Science.ACADEMICS];
     clone.sciences[Science.ENGINEERING] = player.sciences[Science.ENGINEERING];
@@ -1503,12 +1503,12 @@ var SevenWonders = function() {
       boards = Array.prototype.slice.call(WONDERS);
       var side = Math.random() < 0.5 ? 'A' : 'B';
       this.players = this.playerInterfaces.map(function(playerInterface) {
-        return new Player(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], side, playerInterface);
+        return new PlayerState(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], side, playerInterface);
       });
     } else {
       this.players = [];
       for (var i = 0; i < len; i++) {
-        this.players.push(new Player(getBoard(boards[i].name), boards[i].side, this.playerInterfaces[i]));
+        this.players.push(new PlayerState(getBoard(boards[i].name), boards[i].side, this.playerInterfaces[i]));
       }
     }
 

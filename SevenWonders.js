@@ -1501,8 +1501,9 @@ var SevenWonders = function() {
     var len = this.numPlayers;
     if (!boards) {
       boards = Array.prototype.slice.call(WONDERS);
+      var side = Math.random() < 0.5 ? 'A' : 'B';
       this.players = this.playerInterfaces.map(function(playerInterface) {
-        return new Player(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], Math.random() < 0.5 ? 'A' : 'B', playerInterface);
+        return new Player(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], side, playerInterface);
       });
     } else {
       this.players = [];

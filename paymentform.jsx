@@ -4,7 +4,7 @@ window.PaymentForm = class PaymentForm extends React.Component {
     super(props);
     this.state = {
       bank: 0,
-      card: null,
+      card: {},
       cardIndex: -1,
       east: [],
       west: []
@@ -18,20 +18,21 @@ window.PaymentForm = class PaymentForm extends React.Component {
   }
 
   handleButtonClick(action) {
-    this.props.gameState.child('turns').push({
-      id: this.props.id,
-      action: action,
-      card: {
-        name: this.state.card.name,
-        minPlayers: this.state.card.minPlayers,
-        age: this.state.card.age
-      },
+    const data = {
+      card: this.state.card,
       payment: {
         bank: this.state.bank,
         east: this.state.east.filter(isFinite),
         west: this.state.west.filter(isFinite)
       }
-    });
+    };
+    let act = this.props.actions.discard;
+    if (action == PaymentForm.Action.BUILD) {
+      act = this.props.actions.build;
+    } else if (action == PaymentForm.Action.BUILD_WONDER) {
+      act = this.props.actions.buildWonder;
+    }
+    act(data);
     this.resetState();
   }
 
@@ -74,11 +75,11 @@ window.PaymentForm = class PaymentForm extends React.Component {
         }}>
           <div>
             Purchase from western (left) neighbor:
-            <ResourcePicker multi={this.props.west.multiResources} single={this.props.west.resources} selected={this.state.west} onSelectionChange={this.handleWestPaymentChange.bind(this)} />
+            <ResourcePicker multi={this.props.west.multi} single={this.props.west.single} selected={this.state.west} onSelectionChange={this.handleWestPaymentChange.bind(this)} />
           </div>
           <div style={{marginLeft: '1em'}}>
             Purchase from eastern (right) neighbor:
-            <ResourcePicker multi={this.props.east.multiResources} single={this.props.east.resources} selected={this.state.east} onSelectionChange={this.handleEastPaymentChange.bind(this)} />
+            <ResourcePicker multi={this.props.east.multi} single={this.props.east.single} selected={this.state.east} onSelectionChange={this.handleEastPaymentChange.bind(this)} />
           </div>
         </div>
         <div style={{margin: '.5em 0'}}>
@@ -103,8 +104,8 @@ PaymentForm.Action = {
 };
 
 PaymentForm.propTypes = {
+  actions: React.PropTypes.object.isRequired,
   east: React.PropTypes.object.isRequired,
   hand: React.PropTypes.array.isRequired,
-  id: React.PropTypes.number.isRequired,
   west: React.PropTypes.object.isRequired
 };

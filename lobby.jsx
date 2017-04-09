@@ -52,6 +52,7 @@ window.Lobby = React.createClass({
   render: function() {
     var games = Object.keys(this.props.games).map(function(gameName) {
       var game = this.props.games[gameName];
+      game.players = game.players || [];
       return (
         <tr key={gameName} className={game.completed}>
           <td>{gameName}</td>

@@ -1,5 +1,7 @@
-window.Hand = class Hand extends React.Component {
+import React, { Component } from 'react';
+import Card from './Card.js';
 
+class Hand extends Component {
   constructor(props) {
     super(props);
   }
@@ -35,3 +37,5 @@ Hand.propTypes = {
   onSelect: React.PropTypes.func.isRequired,
   selected: React.PropTypes.number
 };
+
+export default Hand;

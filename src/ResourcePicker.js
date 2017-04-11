@@ -1,21 +1,14 @@
-(function() {
+import React from 'react';
+import { Resource } from './misc.js';
+import ResourceButton from './ResourceButton.js';
+import './ResourcePicker.css';
 
-var Resource = {
-  CLAY: 0,
-  STONE: 1,
-  WOOD: 2,
-  ORE: 3,
-  GLASS: 4,
-  CLOTH: 5,
-  PAPER: 6
-};
-
-var ResourceFromNumber = [];
+const ResourceFromNumber = [];
 Object.keys(Resource).forEach(function(key) {
   ResourceFromNumber[Resource[key]] = key;
 });
 
-window.ResourcePicker = React.createClass({
+const ResourcePicker = React.createClass({
   propTypes: {
     multi: React.PropTypes.array.isRequired,
     onSelectionChange: React.PropTypes.func.isRequired,
@@ -79,4 +72,4 @@ window.ResourcePicker = React.createClass({
   }
 });
 
-})();
+export default ResourcePicker;

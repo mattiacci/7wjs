@@ -1,5 +1,9 @@
-window.PlayerUI = class PlayerUI extends React.Component {
+import React, { Component } from 'react';
+import PaymentForm from './PaymentForm.js';
+import PlayerField from './PlayerField.js';
+import './PlayerUI.css';
 
+class PlayerUI extends Component {
   constructor(props) {
     super(props);
   }
@@ -55,7 +59,7 @@ window.PlayerUI = class PlayerUI extends React.Component {
         {overlay}
       </div>
     );
-
   }
-
 };
+
+export default PlayerUI;

@@ -1,10 +1,11 @@
-(function() {
+import React from 'react';
+import './card.css';
 
 // TODO: Move these elsewhere?
 var resourceSymbols = ['clay', 'stone', 'wood', 'ore', 'glass', 'cloth', 'paper'];
 var backgroundColors = ['rgb(192,128,96)','rgb(192,192,192)','rgb(255,255,0)','rgb(128,0,128)','rgb(255,0,0)','rgb(0,128,0)','rgb(0,128,0)','rgb(0,128,0)','rgb(0,0,255)','rgb(255,255,255)'];
 
-window.Card = function(props) {
+const Card = function(props) {
   var data = props.data;
   return (
     <div className={'Card card' + (props.selected ? ' selected' : '') + (props.unplayable ? ' unplayable' : '') + (props.free ? ' free' : '') + (props.isLast ? ' last' : '')}
@@ -39,10 +40,10 @@ window.Card = function(props) {
       }
       <p style={{margin: '.5em 0'}}>{data.tooltip}</p>
       <div className="image" style={{
-        backgroundImage: 'url("' + window.ASSET_URL_PREFIX + 'Assets/Age ' + data.age + '/' + data.minPlayers + ' ' + data.name + '.jpg")'
+        backgroundImage: 'url("' + process.env.REACT_APP_ASSET_URL_PREFIX + 'Assets/Age ' + data.age + '/' + data.minPlayers + ' ' + data.name + '.jpg")'
       }}></div>
     </div>
   );
 };
 
-})();
+export default Card;

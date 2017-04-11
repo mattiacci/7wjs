@@ -1,0 +1,17 @@
+.PlayerUI {
+  border: 1px solid black;
+  padding: 15px;
+  position: relative;
+}
+.PlayerUI .waiting-overlay {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, -1px -1px black, 1px -1px black, -1px 1px black, 1px 1px black;
+    text-transform: uppercase;
+    top: 0;
+    width: 100%;
+}

@@ -1,0 +1,10 @@
+.ScoreCard {
+  background-repeat: no-repeat;
+  background-size: contain;
+  padding: 10px 0 10px 41px;
+  text-align: right;
+}
+.ScoreCard td {
+  max-width: 30px;
+  width: 30px;
+}

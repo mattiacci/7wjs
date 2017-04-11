@@ -1,5 +1,9 @@
-window.PaymentForm = class PaymentForm extends React.Component {
+import React, { Component } from 'react';
+import { Action } from './misc.js';
+import Hand from './Hand.js';
+import ResourcePicker from './ResourcePicker.js';
 
+class PaymentForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -27,9 +31,9 @@ window.PaymentForm = class PaymentForm extends React.Component {
       }
     };
     let act = this.props.actions.discard;
-    if (action == PaymentForm.Action.BUILD) {
+    if (action == Action.BUILD) {
       act = this.props.actions.build;
-    } else if (action == PaymentForm.Action.BUILD_WONDER) {
+    } else if (action == Action.BUILD_WONDER) {
       act = this.props.actions.buildWonder;
     }
     act(data);
@@ -88,19 +92,13 @@ window.PaymentForm = class PaymentForm extends React.Component {
           </label>
         </div>
         <div>
-          <button onClick={this.handleButtonClick.bind(this, PaymentForm.Action.BUILD)}>Build</button>
-          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, PaymentForm.Action.BUILD_WONDER)}>Build Wonder</button>
-          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, PaymentForm.Action.DISCARD)}>Discard</button>
+          <button onClick={this.handleButtonClick.bind(this, Action.BUILD)}>Build</button>
+          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, Action.BUILD_WONDER)}>Build Wonder</button>
+          <button style={{marginLeft: '.5em'}} onClick={this.handleButtonClick.bind(this, Action.DISCARD)}>Discard</button>
         </div>
       </div>
     );
   }
-};
-
-PaymentForm.Action = {
-  BUILD: 0,
-  BUILD_WONDER: 1,
-  DISCARD: 2
 };
 
 PaymentForm.propTypes = {
@@ -109,3 +107,5 @@ PaymentForm.propTypes = {
   hand: React.PropTypes.array.isRequired,
   west: React.PropTypes.object.isRequired
 };
+
+export default PaymentForm;

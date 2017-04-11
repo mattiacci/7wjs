@@ -1,20 +1,9 @@
-(function() {
+import React from 'react';
+import Card from './Card.js';
+import { CardType } from './misc.js';
+import WonderBoard from './WonderBoard.js';
 
-// TODO: Use shared CardType definition.
-var CardType = {
-  RESOURCE: 0, // Brown
-  GOODS: 1,    // Grey
-  COMMERCE: 2, // Yellow
-  GUILD: 3,    // Purple
-  MILITARY: 4, // Red
-  ACADEMICS: 5,  // Green Sextant
-  ENGINEERING: 6, // Green Gear
-  LITERATURE: 7, // Green Tablet
-  VICTORY: 8,  // Blue
-  WONDER: 9
-};
-
-window.PlayerField = function(props) {
+const PlayerField = function(props) {
   var lastBuiltCard = props.cards.length > 0 ? props.cards[props.cards.length - 1] : null;
   var builtCards = [];
   Object.keys(CardType).forEach(function(type) {
@@ -70,5 +59,4 @@ window.PlayerField = function(props) {
   );
 };
 
-
-})();
+export default PlayerField;

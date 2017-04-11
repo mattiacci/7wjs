@@ -1,5 +1,8 @@
-window.GameUI = class GameUI extends React.Component {
+import React, { Component } from 'react';
+import PlayerUI from './PlayerUI.js';
+import './GameUI.css';
 
+class GameUI extends Component {
   constructor(props) {
     super(props);
   }
@@ -25,5 +28,6 @@ window.GameUI = class GameUI extends React.Component {
       </div>
     );
   }
-
 };
+
+export default GameUI;

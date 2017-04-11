@@ -1,0 +1,62 @@
+.card {
+  border-radius: 8px; /* used for highlights or when images aren't available */
+  box-sizing: border-box;
+  display: inline-block;
+  font-size: 12px;
+  height: 158px;
+  margin: 5px 3px;
+  padding: 6px;
+  position: relative;
+  transition: .2s all;
+  vertical-align: text-top;
+  white-space: normal;
+  width: 102px;
+  z-index: 0; /* Explicit z-index for transition. */
+}
+.card:hover {
+  transform: scale(1.5);
+  z-index: 100; /* 100 is enough that the easing works well when multiple cards are transitioning. */
+}
+.card .image {
+  background: center no-repeat;
+  background-size: contain;
+  border-radius: 8px; /* used to crop image */
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.card.selected .image {
+  border-radius: 8px;
+  box-shadow: 0 0 0px 3px red;
+}
+.card.unplayable:not(:hover) {
+  -webkit-filter: grayscale(50%) opacity(60%);
+  filter: grayscale(50%) opacity(60%);
+}
+.card.free {
+  box-shadow: 0 0 0px 3px gold;
+}
+.card.last, .back.last {
+  box-shadow: 0 0 0px 3px cornflowerblue;
+}
+.back {
+  position: absolute;
+  border-radius: 8px;
+  bottom: 0;
+  width: 102px;
+  height: 158px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.back.hoverable {
+  transform: rotateY(180deg);
+  opacity: 0;
+  transition: .2s all;
+}
+.back.hoverable:hover {
+  opacity: 1;
+  transform: scale(1.5) translateY(-20px) rotateY(180deg);
+  z-index: 1;
+}

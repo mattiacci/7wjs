@@ -1,5 +1,9 @@
+import React from 'react';
+import './WonderBoard.css';
+import './card.css';
+
 // TODO: Stage count shouldn't need to be passed in. Should all Wonder data be stored here?
-window.WonderBoard = function(props) {
+const WonderBoard = function(props) {
   var start, delta;
   if (props.side == 'A' || props.stageCount == 6) {
     start = 38;
@@ -15,7 +19,7 @@ window.WonderBoard = function(props) {
     return <div />;
   }
   var cardBacks = props.built.map(function(cardOrAge, i) {
-    var path = window.ASSET_URL_PREFIX + 'Assets/Age ';
+    var path = process.env.REACT_APP_ASSET_URL_PREFIX + 'Assets/Age ';
     if (cardOrAge.age) {
       return (
         <div key={i} className="back-container" style={{left: start + delta * i}}>
@@ -40,8 +44,10 @@ window.WonderBoard = function(props) {
     <div className="WonderBoard wonder">
       {cardBacks}
       <div className="board" style={{
-        backgroundImage: 'url("' + window.ASSET_URL_PREFIX + 'Assets/' + props.name + ' ' + props.side + '.jpg")'
+        backgroundImage: 'url("' + process.env.REACT_APP_ASSET_URL_PREFIX + 'Assets/' + props.name + ' ' + props.side + '.jpg")'
       }} />
     </div>
   );
 };
+
+export default WonderBoard;

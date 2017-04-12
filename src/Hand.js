@@ -1,21 +1,28 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Card from './Card.js';
 
 class Hand extends Component {
-  constructor(props) {
-    super(props);
+  static defaultProps = {
+    selected: -1
   }
 
-  handleCardClick(e) {
-    const index = parseInt(e.currentTarget.getAttribute('data-index'));
+  static propTypes = {
+    cards: PropTypes.array.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    selected: PropTypes.number
+  }
+
+  handleCardClick = (e) => {
+    const index = parseInt(e.currentTarget.getAttribute('data-index'), 10);
     this.props.onSelect(index);
   }
 
   render() {
     const cards = this.props.cards.map(function(card, i) {
       return (
-        <div data-index={i} key={i} style={{display: 'inline-block'}} onClick={this.handleCardClick.bind(this)}>
-          <Card data={card} selected={i == this.props.selected} unplayable={card.unplayable} free={card.free}/>
+        <div data-index={i} key={i} style={{display: 'inline-block'}} onClick={this.handleCardClick}>
+          <Card data={card} selected={i === this.props.selected} unplayable={card.unplayable} free={card.free}/>
         </div>
       );
     }, this);
@@ -25,17 +32,6 @@ class Hand extends Component {
       </div>
     );
   }
-
-};
-
-Hand.defaultProps = {
-  selected: -1
-};
-
-Hand.propTypes = {
-  cards: React.PropTypes.array.isRequired,
-  onSelect: React.PropTypes.func.isRequired,
-  selected: React.PropTypes.number
 };
 
 export default Hand;

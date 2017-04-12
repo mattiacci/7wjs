@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import * as firebase from 'firebase';
 import { Link, withRouter } from 'react-router-dom';
 import { AGE1DECK, AGE2DECK, AGE3DECK, WONDERS } from './misc.js';
@@ -54,7 +55,7 @@ function shuffleCards(players) {
 
 const Lobby = withRouter(class extends Component {
   static propTypes = {
-    history: React.PropTypes.object.isRequired
+    history: PropTypes.object.isRequired
   }
 
   constructor(props) {

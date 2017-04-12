@@ -5,13 +5,13 @@ import './card.css';
 // TODO: Stage count shouldn't need to be passed in. Should all Wonder data be stored here?
 const WonderBoard = function(props) {
   var start, delta;
-  if (props.side == 'A' || props.stageCount == 6) {
+  if (props.side === 'A' || props.stageCount === 6) {
     start = 38;
     delta = 116;
-  } else if (props.stageCount == 7) {
+  } else if (props.stageCount === 7) {
     start = 0;
     delta = 105;
-  } else if (props.stageCount == 5) {
+  } else if (props.stageCount === 5) {
     start = 155;
     delta = 116;
   } else {

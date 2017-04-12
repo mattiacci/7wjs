@@ -13,11 +13,11 @@ const Card = function(props) {
       <h4 style={{margin: '0 0 .5em 0'}}>{data.name}</h4>
       {
         data.cost.map(function(cost, i) {
-          if (typeof cost == 'string') {
+          if (typeof cost === 'string') {
             return (
               <div key={i}>{cost}</div>
             );
-          } else if (typeof cost == 'object') {
+          } else if (typeof cost === 'object') {
             return (
               <div key={i}>
                 {
@@ -29,12 +29,13 @@ const Card = function(props) {
                 }
               </div>
             );
-          } else if (typeof cost == 'number') {
+          } else if (typeof cost === 'number') {
             return (
               <div key={i}>1 gold</div>
             );
           } else {
-            console.error('Invalid card cost type');
+            window.console.error('Invalid card cost type');
+            return null;
           }
         })
       }

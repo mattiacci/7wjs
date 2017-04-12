@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Resource } from './misc.js';
 import ResourceButton from './ResourceButton.js';
 import './ResourcePicker.css';
@@ -10,10 +11,10 @@ Object.keys(Resource).forEach(function(key) {
 
 const ResourcePicker = React.createClass({
   propTypes: {
-    multi: React.PropTypes.array.isRequired,
-    onSelectionChange: React.PropTypes.func.isRequired,
-    selected: React.PropTypes.array.isRequired,
-    single: React.PropTypes.object.isRequired,
+    multi: PropTypes.array.isRequired,
+    onSelectionChange: PropTypes.func.isRequired,
+    selected: PropTypes.array.isRequired,
+    single: PropTypes.object.isRequired,
   },
   getDefaultProps: function() {
     return {
@@ -31,7 +32,7 @@ const ResourcePicker = React.createClass({
     for (var resourceName in Resource) {
       var value = Resource[resourceName];
       var amount = this.props.single[value];
-      for (var i = 0; i < amount; i++) {
+      for (let i = 0; i < amount; i++) {
         var selected = isFinite(this.props.selected[index]);
         single.push(
           <div key={index} style={{
@@ -47,9 +48,9 @@ const ResourcePicker = React.createClass({
 
     var multiResources = this.props.multi.filter(function(m) {
       // Caravansery and Forum are multiResources, so checking for length two filters them out.
-      return m.length == 2;
+      return m.length === 2;
     });
-    for (var i = 0; i < multiResources.length; i++) {
+    for (let i = 0; i < multiResources.length; i++) {
       var m = multiResources[i];
       var selectedLeft = this.props.selected[index] === m[0];
       var selectedRight = this.props.selected[index] === m[1];

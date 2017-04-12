@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import * as firebase from 'firebase';
 import GameUI from './GameUI.js';
@@ -9,7 +10,7 @@ import './Game.css'
 
 class Game extends Component {
   static propTypes = {
-    match: React.PropTypes.object.isRequired
+    match: PropTypes.object.isRequired
   }
 
   constructor(props) {

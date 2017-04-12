@@ -4,10 +4,6 @@ import PlayerField from './PlayerField.js';
 import './PlayerUI.css';
 
 class PlayerUI extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   handleUndoClick() {
     if (this.props.actions.undo) {
       this.props.actions.undo();

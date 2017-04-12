@@ -10,7 +10,7 @@ const PlayerField = function(props) {
     builtCards[CardType[type]] = [];
   });
   props.cards.filter(function(card) {
-    return card.type != CardType.WONDER;
+    return card.type !== CardType.WONDER;
   }).forEach(function(card) {
     builtCards[card.type].push(card);
   });
@@ -36,7 +36,7 @@ const PlayerField = function(props) {
           marginTop: marginTop,
           verticalAlign: 'top'
         }}>
-          <Card data={card} isLast={card == lastBuiltCard}/>
+          <Card data={card} isLast={card === lastBuiltCard}/>
         </div>
       );
     });

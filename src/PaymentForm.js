@@ -31,9 +31,9 @@ class PaymentForm extends Component {
       }
     };
     let act = this.props.actions.discard;
-    if (action == Action.BUILD) {
+    if (action === Action.BUILD) {
       act = this.props.actions.build;
-    } else if (action == Action.BUILD_WONDER) {
+    } else if (action === Action.BUILD_WONDER) {
       act = this.props.actions.buildWonder;
     }
     act(data);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Resource } from './misc.js';
 import ResourceButton from './ResourceButton.js';
@@ -9,25 +9,26 @@ Object.keys(Resource).forEach(function(key) {
   ResourceFromNumber[Resource[key]] = key;
 });
 
-const ResourcePicker = React.createClass({
-  propTypes: {
+class ResourcePicker extends Component {
+  static defaultProps = {
+    multi: [],
+    single: []
+  }
+
+  static propTypes = {
     multi: PropTypes.array.isRequired,
     onSelectionChange: PropTypes.func.isRequired,
     selected: PropTypes.array.isRequired,
     single: PropTypes.object.isRequired,
-  },
-  getDefaultProps: function() {
-    return {
-      multi: [],
-      single: []
-    };
-  },
-  handleSelectionChange: function(index, value, e) {
+  }
+
+  handleSelectionChange = (index, value, e) => {
     var selected = this.props.selected.slice();
     selected[index] = value === selected[index] ? undefined : value;
     this.props.onSelectionChange(selected);
-  },
-  render: function() {
+  }
+
+  render() {
     var single = [], multi = [], index = 0;
     for (var resourceName in Resource) {
       var value = Resource[resourceName];
@@ -71,6 +72,6 @@ const ResourcePicker = React.createClass({
       </div>
     );
   }
-});
+}
 
 export default ResourcePicker;

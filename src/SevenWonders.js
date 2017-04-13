@@ -142,6 +142,57 @@ const resourceType = function(resource, east) {
   }
 };
 
+const canGenerateOrPay = function(needed, gold, resourceList, generatorList) {
+  if (needed.length === 0) {
+    return true;
+  }
+  for (let i = 0; i < 3 && i <= gold; i++) {
+    const index = resourceList[i].indexOf(needed[0]);
+    if (index !== -1) {
+      const newResourceList = resourceList.map(function(resources) {
+        return resources.slice(0);
+      });
+      const newGeneratorList = generatorList.map(function(generators) {
+        return generators.map(function(generator) {
+          return generator.slice(0);
+        });
+      });
+
+      newResourceList[i].splice(index, 1);
+      const remainingNeeded = needed.slice(0);
+      remainingNeeded.splice(0, 1);
+      const possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
+      if (possible) {
+        return true;
+      }
+    }
+
+    // Try generators
+    const generators = generatorList[i];
+    for (let j = 0; j < generators.length; j++) {
+      if (generators[j].indexOf(needed[0]) !== -1) {
+        const newResourceList = resourceList.map(function(resources) {
+          return resources.slice(0);
+        });
+        const newGeneratorList = generatorList.map(function(generators) {
+          return generators.map(function(generator) {
+            return generator.slice(0);
+          });
+        });
+
+        newGeneratorList[i].splice(j, 1);
+        const remainingNeeded = needed.slice(0);
+        remainingNeeded.splice(0, 1);
+        const possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
+        if (possible) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
 const canPlay = function(player, card, free) {
   // check duplicates
   if (player.built.some(function(built) {
@@ -186,42 +237,42 @@ const canPlay = function(player, card, free) {
         var resources = [[], [], []];
         for (let resource in player.east.resources) {
           resource = parseInt(resource, 10);
-          var amount = player.east.resources[resource];
+          const amount = player.east.resources[resource];
           if (amount === 0) {
             continue;
           }
-          var costOfResource = player.tradeCost[resourceType(resource, true)];
-          for (var j = 0; j < amount; j++) {
+          const costOfResource = player.tradeCost[resourceType(resource, true)];
+          for (let j = 0; j < amount; j++) {
             resources[costOfResource].push(resource);
           }
         }
         for (let resource in player.west.resources) {
           resource = parseInt(resource, 10);
-          var amount = player.west.resources[resource];
+          const amount = player.west.resources[resource];
           if (amount === 0) {
             continue;
           }
-          var costOfResource = player.tradeCost[resourceType(resource, false)];
-          for (var j = 0; j < amount; j++) {
+          const costOfResource = player.tradeCost[resourceType(resource, false)];
+          for (let j = 0; j < amount; j++) {
             resources[costOfResource].push(resource);
           }
         }
 
         var generators = [player.multiResources.slice(0), [], []];
-        for (var j = 0; j < player.east.multiResources.length; j++) {
+        for (let j = 0; j < player.east.multiResources.length; j++) {
           if (player.east.multiResources[j].length > 2) {
             // Generators that produces more than 2 resources are not tradable.
             continue;
           }
-          var costOfResource = player.tradeCost[resourceType(player.east.multiResources[j][0], true)];
+          let costOfResource = player.tradeCost[resourceType(player.east.multiResources[j][0], true)];
           generators[costOfResource].push(player.east.multiResources[j].slice(0));
         }
-        for (var j = 0; j < player.west.multiResources.length; j++) {
+        for (let j = 0; j < player.west.multiResources.length; j++) {
           if (player.west.multiResources[j].length > 2) {
             // Generators that produces more than 2 resources are not tradable.
             continue;
           }
-          var costOfResource = player.tradeCost[resourceType(player.west.multiResources[j][0], false)];
+          let costOfResource = player.tradeCost[resourceType(player.west.multiResources[j][0], false)];
           generators[costOfResource].push(player.west.multiResources[j].slice(0));
         }
 
@@ -298,58 +349,6 @@ var isFree = function(player, card, free) {
   }
   return false;
 }
-
-var canGenerateOrPay = function(needed, gold, resourceList, generatorList) {
-  if (needed.length === 0) {
-    return true;
-  }
-  for (var i = 0; i < 3 && i <= gold; i++) {
-    var index = resourceList[i].indexOf(needed[0]);
-    if (index !== -1) {
-      var newResourceList = resourceList.map(function(resources) {
-        return resources.slice(0);
-      });
-      var newGeneratorList = generatorList.map(function(generators) {
-        return generators.map(function(generator) {
-          return generator.slice(0);
-        });
-      });
-
-      newResourceList[i].splice(index, 1);
-      var remainingNeeded = needed.slice(0);
-      remainingNeeded.splice(0, 1);
-      var possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
-      if (possible) {
-        return true;
-      }
-    }
-
-    // Try generators
-    var generators = generatorList[i];
-    for (var j = 0; j < generators.length; j++) {
-      var index = generators[j].indexOf(needed[0]);
-      if (index !== -1) {
-        var newResourceList = resourceList.map(function(resources) {
-          return resources.slice(0);
-        });
-        var newGeneratorList = generatorList.map(function(generators) {
-          return generators.map(function(generator) {
-            return generator.slice(0);
-          });
-        });
-
-        newGeneratorList[i].splice(j, 1);
-        var remainingNeeded = needed.slice(0);
-        remainingNeeded.splice(0, 1);
-        var possible = canGenerateOrPay(remainingNeeded, gold - i, newResourceList, newGeneratorList);
-        if (possible) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-};
 
 var verify = function(player, card, payment) {
   if (card.cost.length === 0) {

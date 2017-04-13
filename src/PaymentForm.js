@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Action } from './misc.js';
 import Hand from './Hand.js';
 import ResourcePicker from './ResourcePicker.js';
@@ -102,10 +103,10 @@ class PaymentForm extends Component {
 };
 
 PaymentForm.propTypes = {
-  actions: React.PropTypes.object.isRequired,
-  east: React.PropTypes.object.isRequired,
-  hand: React.PropTypes.array.isRequired,
-  west: React.PropTypes.object.isRequired
+  actions: PropTypes.object.isRequired,
+  east: PropTypes.object.isRequired,
+  hand: PropTypes.array.isRequired,
+  west: PropTypes.object.isRequired
 };
 
 export default PaymentForm;

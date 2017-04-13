@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+// TODO: Determine whether prop-types gets into compiled JS and remove it if so.
+// See https://facebook.github.io/react/docs/installation.html for info.
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import * as firebase from 'firebase';
@@ -138,7 +140,7 @@ class Game extends Component {
         : null;
     return (
       <div className="Game">
-        <Link to="/"><button>Quit</button></Link>
+        <Link to={process.env.PUBLIC_URL + '/'}><button>Quit</button></Link>
         {scoreCard}
         {gameUI}
       </div>

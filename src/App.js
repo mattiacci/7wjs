@@ -19,7 +19,7 @@ const AuthenticatedRoute = ({ component, ...rest }) => (
       React.createElement(component, props)
     ) : (
       <Redirect to={{
-        pathname: '/login',
+        pathname: process.env.PUBLIC_URL + '/login',
         state: { from: props.location }
       }}/>
     )
@@ -30,12 +30,12 @@ const LoginStatus = withRouter(({ history }) => (
   fakeAuth.isAuthenticated ? (
     <p>
       Welcome, {fakeAuth.name}! <button onClick={() => {
-        fakeAuth.logOut(() => history.push('/'))
+        fakeAuth.logOut(() => history.push(process.env.PUBLIC_URL + '/'))
       }}>Log out</button>
     </p>
   ) : (
     <p>
-      <Link to="/login">Log in</Link>
+      <Link to={process.env.PUBLIC_URL + '/login'}>Log in</Link>
     </p>
   )
 ))
@@ -57,7 +57,8 @@ const LoginForm = withRouter(class extends Component {
   }
 
   render() {
-    const { from } = this.props.location.state || { from: { pathname: '/' } };
+    const { from } = this.props.location.state ||
+        { from: { pathname: process.env.PUBLIC_URL + '/' } };
     const { redirectToReferrer, name } = this.state;
     
     if (redirectToReferrer) {
@@ -68,7 +69,7 @@ const LoginForm = withRouter(class extends Component {
 
     if (fakeAuth.isAuthenticated) {
       return (
-        <Redirect to={{pathname: '/'}}/>
+        <Redirect to={{pathname: process.env.PUBLIC_URL + '/'}}/>
       );
     }
     
@@ -111,8 +112,8 @@ class App extends Component {
       <div className="App">
         <BrowserRouter>
           <Switch>
-            <AuthenticatedRoute path="/game/:gameId" component={Game}/>
-            <Route path="/login" component={LoginForm}/>
+            <AuthenticatedRoute path={process.env.PUBLIC_URL + '/game/:gameId'} component={Game}/>
+            <Route path={process.env.PUBLIC_URL + '/login'} component={LoginForm}/>
             <Route component={GameBrowser}/>
           </Switch>
         </BrowserRouter>

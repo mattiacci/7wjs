@@ -103,7 +103,8 @@ const Lobby = withRouter(class extends Component {
       return game;
     }).then((result) => {
       if (result.committed) {
-        this.props.history.push(`/game/${result.snapshot.key}`);
+        this.props.history.push(
+            process.env.PUBLIC_URL + `/game/${result.snapshot.key}`);
       }
     });
   }
@@ -126,7 +127,7 @@ const Lobby = withRouter(class extends Component {
             <td>{gameName}</td>
             <td>{game.players.join(', ')}</td>
             <td>
-              <Link to={`/game/${gameName}`}>
+              <Link to={process.env.PUBLIC_URL + `/game/${gameName}`}>
                 <button>Join</button>
               </Link>
             </td>

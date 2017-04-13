@@ -34,14 +34,20 @@ REACT_APP_FIREBASE_CONFIG={"apiKey":"","databaseURL":"","projectId":"", ... }
 REACT_APP_ASSET_URL_PREFIX=http://www.foo.foo/
 ```
 
-## Run, Test, Build
+## Run and Test
 
 From the project's top-level directory, you can run the following commands:
 
 ```
 npm start       // Starts a dev server at http://localhost:3000. Ctrl+C to stop.
 npm test        // Runs tests, of course.
-npm run build   // Creates an optimized production build. See note below!
+```
+
+## Build and Deploy
+
+```
+npm run build
+rsync -av --chmod=D2775,F664 build/ <user>@<domain>:<absolute-path>
 ```
 
 Note that `npm run build` uses your `.env` file to build, so *make sure that's

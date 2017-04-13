@@ -2,7 +2,7 @@
   "name": "7wjs",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "/sevenwonders",
   "dependencies": {
     "firebase": "^3.7.5",
     "prop-types": "^15.5.8",

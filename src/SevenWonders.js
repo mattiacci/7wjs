@@ -904,15 +904,14 @@ var SevenWonders = function() {
 
   this.endGame = function() {
     this.updateCurrentScores();
-
-    for (var i = 0; i < this.numPlayers; i++) {
+    for (let i = 0; i < this.numPlayers; i++) {
       this.players[i].victoryPoints = this.players[i].currentScore.slice(0);
-
       console.log(this.players[i].victoryPoints);
-
+    }
+    this.cachePublicGameState();
+    for (let i = 0; i < this.numPlayers; i++) {
       this.playerInterfaces[i].endGame(new Turn(this.players[i], this, this.hands[this.age], i));
     }
-
     const scoreCard = [];
     for (let i = 0; i < this.players.length; i++) {
       scoreCard.push({
@@ -923,6 +922,7 @@ var SevenWonders = function() {
     }
     this.endGameCallback(scoreCard);
   };
+
   this.doBattle = function() {
     for (var i = 0; i < this.numPlayers; i++) {
       if (this.players[i].military < this.players[i].east.military) {

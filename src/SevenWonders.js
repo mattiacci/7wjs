@@ -12,7 +12,7 @@ import {
   calcScienceScore
 } from './misc.js';
 
-var getBoard = function(name) {
+const getBoard = function(name) {
   for (var i = 0; i < WONDERS.length; i++) {
     if (WONDERS[i].name === name) {
       return WONDERS[i];
@@ -20,7 +20,7 @@ var getBoard = function(name) {
   }
 };
 
-var getCard = function(details) {
+const getCard = function(details) {
   if (!details) {
     return null;
   }
@@ -34,14 +34,14 @@ var getCard = function(details) {
   return fetched[0];
 };
 
-var getNextStage = function(player) {
+const getNextStage = function(player) {
   return player.board.stages.filter(function(candidate) {
     console.log('matching', candidate.name, (player.board.name.charAt(0) + player.side + (player.stagesBuilt.length + 1)));
     return candidate.name === (player.board.name.charAt(0) + player.side + (player.stagesBuilt.length + 1));
   })[0];
 };
 
-var executeReward = function(func, player) {
+const executeReward = function(func, player) {
   return function() {
     func(player);
   };
@@ -68,7 +68,7 @@ const canGenerate = function(resources, needed) {
   return false;
 };
 
-var canPay = function(resources /* unspent multi resources that the player has */, needed /* what is needed for building that does not need to be bought */, purchase /* what the player is trying to buy */) {
+const canPay = function(resources /* unspent multi resources that the player has */, needed /* what is needed for building that does not need to be bought */, purchase /* what the player is trying to buy */) {
   console.log('trying', resources.slice(0), needed.slice(0));
   if (needed.length === 0) {
     // once what is needed has been fulfilled, ensure that things to purchase cannot possibly be fulfilled with unspent resources
@@ -112,7 +112,7 @@ var canPay = function(resources /* unspent multi resources that the player has *
   return false;
 };
 
-var fulfillWithSimpleResources = function(needed, player) {
+const fulfillWithSimpleResources = function(needed, player) {
   console.log('fulfilling with simple resources', needed.slice(0));
   for (let resource in player.resources) {
     resource = parseInt(resource, 10);
@@ -311,7 +311,7 @@ const noValidPlays = function(player, game, hand, free) {
   return  validPlays(player, game, hand, free).length === 0;
 };
 
-var isFree = function(player, card, free) {
+const isFree = function(player, card, free) {
   // check duplicates
   if (player.built.some(function(built) {
     return built.name === card.name;
@@ -323,18 +323,17 @@ var isFree = function(player, card, free) {
     return true;
   }
 
-  for (var i = card.cost.length - 1, cost; cost = card.cost[i]; i--) {
+  for (let i = card.cost.length - 1; i > -1; i--) {
+    const cost = card.cost[i];
     switch (typeof cost) {
       case 'string':
         // Search for already built card
-        if (player.built.some(function(built) {
-          return built.name === cost;
-        })) {
+        if (player.built.some((built) => built.name === cost)) {
           return true;
         }
         break;
       case 'object':
-        var needed = cost.slice(0);
+        const needed = cost.slice(0);
         fulfillWithSimpleResources(needed, player);
         if (needed.length === 0) {
           // fulfilled by simple resources
@@ -345,12 +344,18 @@ var isFree = function(player, card, free) {
           // fulfilled by generators
           return true;
         }
+        break;
+      case 'number':
+        // do nothing
+        break;
+      default:
+        window.console.error('attempted to check cost of', (typeof cost));
      }
   }
   return false;
 }
 
-var verify = function(player, card, payment) {
+const verify = function(player, card, payment) {
   if (card.cost.length === 0) {
     // Must not pay if it is a free building.
     var ok = payment.east.length === 0 && payment.west.length === 0 && payment.bank === 0;
@@ -360,7 +365,8 @@ var verify = function(player, card, payment) {
     return ok;
   }
 
-  for (var i = card.cost.length - 1, cost; cost = card.cost[i]; i--) {
+  for (let i = card.cost.length - 1; i > -1; i--) {
+    const cost = card.cost[i];
     switch (typeof cost) {
       case 'string':
         // Search for already built card
@@ -368,7 +374,7 @@ var verify = function(player, card, payment) {
           return built.name === cost;
         }).length > 0) {
           // Qualifies for free build. Must not pay.
-          var ok = payment.east.length === 0 && payment.west.length === 0 && payment.bank === 0;
+          const ok = payment.east.length === 0 && payment.west.length === 0 && payment.bank === 0;
           if (!ok) {
             console.log('ERROR: attempting to pay when can be built for free');
           } else {
@@ -378,15 +384,15 @@ var verify = function(player, card, payment) {
         }
         break;
       case 'object':
-        var needed = cost.slice(0);
+        const needed = cost.slice(0);
         console.log('need', needed.slice(0));
         // check for resources
         fulfillWithSimpleResources(needed, player);
         console.log(needed.slice(0), 'left after fulfillment with simple resources');
 
         // subtract payment
-        for (var j = 0; j < payment.east.length; j++) {
-          var index = needed.indexOf(payment.east[j]);
+        for (let j = 0; j < payment.east.length; j++) {
+          let index = needed.indexOf(payment.east[j]);
           if (index !== -1) {
             needed.splice(index, 1);
           } else {
@@ -397,8 +403,8 @@ var verify = function(player, card, payment) {
         }
         console.log(needed.slice(0), 'after buying from east');
 
-        for (var j = 0; j < payment.west.length; j++) {
-          var index = needed.indexOf(payment.west[j]);
+        for (let j = 0; j < payment.west.length; j++) {
+          let index = needed.indexOf(payment.west[j]);
           if (index !== -1) {
             needed.splice(index, 1);
           } else {
@@ -410,14 +416,14 @@ var verify = function(player, card, payment) {
 
         console.log(needed.slice(0), 'needs to be fulfilled by generators');
         // check for multi resources
-        var resourcesToPurchase = payment.east.concat(payment.west);
+        const resourcesToPurchase = payment.east.concat(payment.west);
         if (!canPay(player.multiResources.slice(0), needed.slice(0), resourcesToPurchase.slice(0))) {
           console.log('ERROR: unable to pay for what is needed using multi resource generators');
           return false;
         }
 
         // check if neighbours have resources
-        var eastPayment = payment.east.slice(0);
+        const eastPayment = payment.east.slice(0);
         fulfillWithSimpleResources(eastPayment, player.east);
         if (!canPay(player.east.multiResources.filter(function(multiResource) {
           return multiResource.length === 2;
@@ -427,7 +433,7 @@ var verify = function(player, card, payment) {
           return false;
         }
 
-        var westPayment = payment.west.slice(0);
+        const westPayment = payment.west.slice(0);
         fulfillWithSimpleResources(westPayment, player.west);
         if (!canPay(player.west.multiResources.filter(function(multiResource) {
           return multiResource.length === 2;
@@ -438,11 +444,11 @@ var verify = function(player, card, payment) {
         }
 
         // check if enough gold to pay neighbours
-        var goldNeeded = 0;
+        let goldNeeded = 0;
         for (var j = 0; j < payment.east.length; j++) {
           goldNeeded += player.tradeCost[resourceType(payment.east[j], true)];
         }
-        for (var j = 0; j < payment.west.length; j++) {
+        for (let j = 0; j < payment.west.length; j++) {
           goldNeeded += player.tradeCost[resourceType(payment.west[j], false)];
         }
 
@@ -451,7 +457,7 @@ var verify = function(player, card, payment) {
           console.log('ERROR: insufficient gold');
           return false;
         } else {
-          var ok = payment.bank === 0;
+          const ok = payment.bank === 0;
           if (!ok) {
             console.log('ERROR: attempting to pay bank unnecessarily');
           } else {
@@ -459,7 +465,6 @@ var verify = function(player, card, payment) {
           }
           return ok;
         }
-
       case 'number':
         if (payment.east.length !== 0 || payment.west.length !== 0) {
           console.log('ERROR: attempting to pay neighbors unnecessarily');
@@ -473,23 +478,26 @@ var verify = function(player, card, payment) {
           console.log('ERROR: need to pay the bank the correct amount of gold');
           return false;
         }
+        break;
+      default:
+        break;
     }
   }
   console.log('ERROR: unable to fulfill any form of payment');
   return false;
 }
 
-var payNeighbours = function(player, payment) {
+const payNeighbours = function(player, payment) {
   return function() {
-    for (var i = 0, resource; i < payment.east.length; i++) {
-      resource = payment.east[i];
-      var amount = player.tradeCost[resourceType(resource, true)];
+    for (let i = 0; i < payment.east.length; i++) {
+      const resource = payment.east[i];
+      const amount = player.tradeCost[resourceType(resource, true)];
       player.gold -= amount;
       player.east.gold += amount;
     }
-    for (var i = 0, resource; i < payment.west.length; i++) {
-      resource = payment.west[i];
-      var amount = player.tradeCost[resourceType(resource, false)];
+    for (let i = 0; i < payment.west.length; i++) {
+      const resource = payment.west[i];
+      const amount = player.tradeCost[resourceType(resource, false)];
       player.gold -= amount;
       player.west.gold += amount;
     }
@@ -497,35 +505,7 @@ var payNeighbours = function(player, payment) {
   };
 };
 
-var Payment = function(east, west, bank) {
-  this.east = [];
-  this.west = [];
-  this.bank = 0;
-
-  if (east !== undefined) {
-    this.east = this.east.concat(east);
-  }
-  if (west !== undefined) {
-    this.west = this.west.concat(west);
-  }
-  if (bank !== undefined) {
-    this.bank += bank;
-  }
-
-  this.payEast = function(resource) {
-    this.east.push(resource);
-  };
-
-  this.payWest = function(resource) {
-    this.west.push(resource);
-  };
-
-  this.payBank = function(amount) {
-    this.bank += amount;
-  };
-};
-
-var Turn = function(player, game, hands, index, free) {
+const Turn = function(player, game, hands, index, free) {
   this.playerState = player;
   this.game = game;
   this.free = free;
@@ -572,7 +552,7 @@ var Turn = function(player, game, hands, index, free) {
 
     if (action === Action.BUILD) {
       // check duplicates
-      for (var i = 0; i < player.built.length; i++) {
+      for (let i = 0; i < player.built.length; i++) {
         if (player.built[i].name === card.name) {
           console.log('ERROR: attepting to duplicate build');
           return false;
@@ -586,10 +566,10 @@ var Turn = function(player, game, hands, index, free) {
         });
       } else if (verify(player, card, payment)) {
         player.built.push(card);
-        var payNeighboursFn = payNeighbours(player, payment);
+        const payNeighboursFn = payNeighbours(player, payment);
         game.endOfRoundPayments.push(payNeighboursFn);
         this.undoStack.push(function() {
-          var i = game.endOfRoundPayments.indexOf(payNeighboursFn);
+          const i = game.endOfRoundPayments.indexOf(payNeighboursFn);
           game.endOfRoundPayments.splice(i, 1);
           player.built.pop();
         });
@@ -605,14 +585,14 @@ var Turn = function(player, game, hands, index, free) {
         return false;
       }
       // reward at end of round
-      var executeRewardsFn = executeReward(card.rewards, player);
+      const executeRewardsFn = executeReward(card.rewards, player);
       game.endOfRoundRewards.push(executeRewardsFn);
       this.undoStack.push(function() {
-        var i = game.endOfRoundRewards.indexOf(executeRewardsFn);
+        const i = game.endOfRoundRewards.indexOf(executeRewardsFn);
         game.endOfRoundRewards.splice(i, 1);
       });
     } else if (action === Action.BUILD_WONDER && !free) {
-      var stage = getNextStage(player);
+      const stage = getNextStage(player);
       if (!stage) {
         console.log('ERROR: Invalid wonder stage');
         return false;
@@ -624,13 +604,13 @@ var Turn = function(player, game, hands, index, free) {
       player.built.push(stage);
       player.stagesBuilt.push(card);
       // pay neighbours at end of round
-      var payNeighboursFn = payNeighbours(player, payment);
+      const payNeighboursFn = payNeighbours(player, payment);
       game.endOfRoundPayments.push(payNeighboursFn);
       // reward at end of round
-      var executeRewardsFn = executeReward(stage.rewards, player)
+      const executeRewardsFn = executeReward(stage.rewards, player)
       game.endOfRoundRewards.push(executeRewardsFn);
       this.undoStack.push(function() {
-        var i = game.endOfRoundRewards.indexOf(executeRewardsFn);
+        let i = game.endOfRoundRewards.indexOf(executeRewardsFn);
         game.endOfRoundRewards.splice(i, 1);
         i = game.endOfRoundPayments.indexOf(payNeighboursFn);
         game.endOfRoundPayments.splice(i, 1);
@@ -649,7 +629,7 @@ var Turn = function(player, game, hands, index, free) {
       game.discarded.push(card);
       player.gold += 3;
       this.undoStack.push(function() {
-        var i = game.discarded.indexOf(card);
+        const i = game.discarded.indexOf(card);
         player.gold -= 3;
         game.discarded.splice(i, 1);
       });
@@ -657,7 +637,7 @@ var Turn = function(player, game, hands, index, free) {
       console.log('ERROR: attempting to build wonder on playDiscarded or attempting to build a duplicate card or attempting to undo before playing');
       return false;
     }
-    for (var i = 0; i < hands[index].length; i++) {
+    for (let i = 0; i < hands[index].length; i++) {
       if (hands[index][i] === card) {
         hands[index].splice(i, 1);
         this.undoStack.push(function() {
@@ -679,7 +659,7 @@ var Turn = function(player, game, hands, index, free) {
   };
 };
 
-var SevenWonders = function() {
+const SevenWonders = function() {
   this.resume = function() {
     for (var i = 0; i < this.numPlayers; i++) {
       this.playerInterfaces[i].process();
@@ -708,7 +688,8 @@ var SevenWonders = function() {
     }
 
     // Clockface
-    for (var i = 0, player; player = this.players[i]; i++) {
+    for (let i = 0; i < this.players.length; i++) {
+      const player = this.players[i];
       player.east = this.players[(i + len - 1) % len];
       player.west = this.players[(i + len + 1) % len];
     }
@@ -730,7 +711,7 @@ var SevenWonders = function() {
       var guilds = AGE3DECK.filter(function(card) {
         return card.minPlayers === 0;
       });
-      for (var i = 0; i < guildsToDiscard; i++) {
+      for (let i = 0; i < guildsToDiscard; i++) {
         guilds.splice(Math.floor(Math.random() * guilds.length), 1);
       }
       decks[2] = AGE3DECK.filter(function(card) {
@@ -739,11 +720,11 @@ var SevenWonders = function() {
 
       // Deal
       this.hands = [];
-      for (var i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         this.hands[i] = [];
-        for (var j = 0; j < len; j++) {
+        for (let j = 0; j < len; j++) {
           var hand = [];
-          for (var k = 0; k < 7; k++) {
+          for (let k = 0; k < 7; k++) {
             hand.push(decks[i].splice(Math.floor(Math.random() * decks[i].length), 1)[0]);
           }
           this.hands[i].push(hand);
@@ -860,12 +841,12 @@ var SevenWonders = function() {
     console.log('playRound');
     console.log(this.hands, this.age, this.numPlayers);
     this.updateCurrentScores();
-    for (var i = 0; i < this.numPlayers; i++) {
+    for (let i = 0; i < this.numPlayers; i++) {
       console.log(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
       this.playerInterfaces[i].update(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
     }
     this.cachePublicGameState();
-    for (var i = 0; i < this.numPlayers; i++) {
+    for (let i = 0; i < this.numPlayers; i++) {
       this.playerInterfaces[i].play();
     }
   };
@@ -875,10 +856,11 @@ var SevenWonders = function() {
   };
 
   this.updateCurrentScores = function() {
-    for (var i = 0; i < this.numPlayers; i++) {
+    for (let i = 0; i < this.numPlayers; i++) {
       this.players[i].currentScore = this.players[i].victoryPoints.slice(0);
-      for (var j = 0, reward; reward = this.players[i].endGameRewards[j]; j++) {
-        var score = reward(this.players[i]);
+      for (let j = 0; this.players[i].endGameRewards[j]; j++) {
+        const reward = this.players[i].endGameRewards[j];
+        const score = reward(this.players[i]);
         this.players[i].currentScore[score.type] += score.points;
       }
 
@@ -942,14 +924,16 @@ var SevenWonders = function() {
     // If all players have played, execute rewards
     if (this.playersDone === len) {
       // Payments, must be before rewards to avoid error due to payment discount
-      for (var i = 0, payment; payment = this.endOfRoundPayments[i]; i++) {
+      for (let i = 0; i < this.endOfRoundPayments.length; i++) {
+        const payment = this.endOfRoundPayments[i];
         console.log('payment', payment);
         payment();
       }
       this.endOfRoundPayments = [];
 
       // Rewards
-      for (var i = 0, reward; reward = this.endOfRoundRewards[i]; i++) {
+      for (let i = 0; i < this.endOfRoundRewards.length; i++) {
+        const reward = this.endOfRoundRewards[i];
         console.log('reward', reward);
         reward();
       }
@@ -957,11 +941,11 @@ var SevenWonders = function() {
 
       // Double build
       if (this.round === 5) {
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
           console.log('player', i, 'can double build?', this.players[i].canDoubleBuild);
           if (this.players[i].canDoubleBuild && this.hands[this.age][i].length === 1) {
             this.playersDone--;
-            for (var j = 0; j < len; j++) {
+            for (let j = 0; j < len; j++) {
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].draw();
             }
@@ -974,7 +958,7 @@ var SevenWonders = function() {
 
       // Discard cards if last round, so that Halikarnassos can play.
       if (this.round === 5) {
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
           if (this.hands[this.age][i].length > 0) {
             this.discarded.push(this.hands[this.age][i][0]);
             // Probably not necessary.
@@ -983,13 +967,13 @@ var SevenWonders = function() {
         }
       }
       // Discarded round
-      for (var i = 0; i < len; i++) {
+      for (let i = 0; i < len; i++) {
         console.log('player', i, 'play discarded now?', this.players[i].playDiscardedNow);
         if (this.players[i].playDiscardedNow) {
           this.players[i].playDiscardedNow = false;
           if (this.discarded.length > 0) {
             this.playersDone--;
-            for (var j = 0; j < len; j++) {
+            for (let j = 0; j < len; j++) {
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].draw();
             }
@@ -1003,7 +987,7 @@ var SevenWonders = function() {
 
       console.log('done with rewards');
       // Print player gold
-      for (var i = 0; i < len; i++) {
+      for (let i = 0; i < len; i++) {
         console.log('Player', i, 'has', this.players[i].gold, 'gold');
       }
 
@@ -1033,7 +1017,7 @@ var SevenWonders = function() {
   }
 };
 
-var PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
+const PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
   if (!requestDraw || !gameState || id === null) {
     console.error('PlayerInterface missing required data');
     return;
@@ -1045,9 +1029,9 @@ var PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
   this.currHand = [];
   this.currTurn = null;
   this.currTurnEnded = true;
-  this.playedTurn;
-  this.action;
-  this.payment;
+  this.playedTurn = null;
+  this.action = null;
+  this.payment = null;;
   this.pendingTurns = [];
   this.loaded = false;
   this.name = name;
@@ -1174,14 +1158,14 @@ var PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
     if (!('Notification' in window)) {
       alert(msg);
     } else if (Notification.permission === 'granted') {
-      var notification = new Notification(msg);
+      new Notification(msg);
     } else if (Notification.permission !== 'denied') {
       Notification.requestPermission(function (permission) {
         if(!('permission' in Notification)) {
           Notification.permission = permission;
         }
         if (permission === 'granted') {
-          var notification = new Notification(msg);
+          new Notification(msg);
         }
       });
     }

@@ -64,6 +64,9 @@ const Lobby = withRouter(class extends Component {
       games: {},
       showCompleted: false
     };
+  }
+
+  componentDidMount() {
     this.rootRef = firebase.database().ref('SevenWonders');
     this.rootRef.on('child_added', (snapshot) => {
       this.state.games[snapshot.key] = snapshot.val();

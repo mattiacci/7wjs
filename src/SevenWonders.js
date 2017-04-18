@@ -1190,5 +1190,4 @@ const PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
 };
 
 SevenWonders.PlayerInterface = PlayerInterface;
-window.SevenWonders = SevenWonders;
 export default SevenWonders;

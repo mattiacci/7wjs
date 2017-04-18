@@ -27,7 +27,6 @@ class Game extends Component {
   componentDidMount() {
     this.gameRef = firebase.database().ref(
         `SevenWonders/${this.props.match.params.gameId}`);
-    window.gameRef = this.gameRef;
     var id = -1;
     // Get the value once to ensure the value exists locally before attempting
     // to run the transaction code.

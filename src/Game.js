@@ -60,32 +60,54 @@ class Game extends Component {
 
         return game;
       }).then((result) => {
-        const snapshot = result.snapshot;
-        if (id !== -1) {
-          const game = snapshot.val();
-          const boards = game.boards;
-          const hands = game.hands;
+        if (id < 0) {
+          return;
+        }
+
+        const game = result.snapshot.val();
+        const gameName = this.props.match.params.gameId;
+        var turnsRef, boards, hands, playerNames, playerCount;
+
+        const setUpGame = () => {
           const interfaces = [];
-          const playerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, this.gameRef, id, game.players[id], true  /* isLocal */);
-          for (let i = 0; i < game.numPlayers; i++) {
+          const playerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, turnsRef, id, playerNames[id], true  /* isLocal */);
+          for (let i = 0; i < playerCount; i++) {
             if (i === id) {
               interfaces.push(playerInterface);
             } else {
-              const remotePlayerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, this.gameRef, i, game.players[i]);
+              const remotePlayerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, turnsRef, i, playerNames[i]);
               interfaces.push(remotePlayerInterface);
             }
           }
 
           // Handle any new game action (e.g. card being built)
-          this.gameRef.child('turns').on('child_added', function(snapshot) {
+          turnsRef.on('child_added', function(snapshot) {
             const turn = snapshot.val();
             const interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
             interfaces[interfaceIndex].pendingTurns.push(turn);
             interfaces[interfaceIndex].process();
           });
 
-          this.currGame = new SevenWonders(interfaces, boards, hands, snapshot.key.indexOf('wreck') === 0, this.endGame);
+          this.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') === 0, this.endGame);
+        };
+
+        // TODO: Remove condition and refactor above after migration complete.
+        if (game.migrated) {
+          // do nothing
+        } else {
+          this.gameRef.on('value', (snapshot) => {
+            if (snapshot.val().migrated) {
+              window.location.reload();
+            }
+          });
+          turnsRef = this.gameRef.child('turns');
+          boards = game.boards;
+          hands = game.hands;
+          playerNames = game.players;
+          playerCount = game.numPlayers;
+          setUpGame();
         }
+
       }).catch((error) => {
         window.console.error(error);
       });

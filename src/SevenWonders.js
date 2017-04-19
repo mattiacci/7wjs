@@ -1017,8 +1017,8 @@ const SevenWonders = function() {
   }
 };
 
-const PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
-  if (!requestDraw || !gameState || id === null) {
+const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
+  if (!requestDraw || !turnsRef || id === null) {
     console.error('PlayerInterface missing required data');
     return;
   }
@@ -1113,7 +1113,7 @@ const PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
     if (this.currTurnEnded && this.allowUndo) {
       return {
         undo: (function() {
-          gameState.child('turns').push({id: this.id, action: Action.UNDO});
+          turnsRef.push({id: this.id, action: Action.UNDO});
         }).bind(this)
       };
     } else if (!this.currTurnEnded) {
@@ -1123,7 +1123,7 @@ const PlayerInterface = function(requestDraw, gameState, id, name, isLocal) {
           id: this.id,
           action: action
         });
-        gameState.child('turns').push(data);
+        turnsRef.push(data);
       }).bind(this);
       return {
         build: function(data) {

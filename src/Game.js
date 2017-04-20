@@ -64,7 +64,7 @@ class Game extends Component {
           return;
         }
 
-        const game = result.snapshot.val();
+        const legacyGame = result.snapshot.val();
         const gameName = this.props.match.params.gameId;
         var turnsRef, boards, hands, playerNames, playerCount;
 
@@ -79,7 +79,6 @@ class Game extends Component {
               interfaces.push(remotePlayerInterface);
             }
           }
-
           // Handle any new game action (e.g. card being built)
           turnsRef.on('child_added', function(snapshot) {
             const turn = snapshot.val();
@@ -87,13 +86,30 @@ class Game extends Component {
             interfaces[interfaceIndex].pendingTurns.push(turn);
             interfaces[interfaceIndex].process();
           });
-
           this.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') === 0, this.endGame);
         };
 
         // TODO: Remove condition and refactor above after migration complete.
-        if (game.migrated) {
-          // do nothing
+        if (legacyGame.migrated) {
+          const key = legacyGame.migrated;
+          const gameStatus =
+              (legacyGame.completed === 'yes' || legacyGame.completed == null) ?
+              'completed' : 'active';
+          turnsRef = firebase.database().ref(`/gamedetails/${key}/turns`);
+          const promises = [];
+          promises.push(
+              firebase.database().ref(`/games/${gameStatus}/${key}`).once('value')
+                  .then((snapshot) => {
+                    playerCount = snapshot.val().playerCount;
+                    playerNames = snapshot.val().players || [];
+                  }));
+          promises.push(
+              firebase.database().ref(`/gamedetails/${key}`).once('value')
+                  .then((snapshot) => {
+                    boards = snapshot.val().boards;
+                    hands = snapshot.val().hands;
+                  }));
+          firebase.Promise.all(promises).then(setUpGame);
         } else {
           this.gameRef.on('value', (snapshot) => {
             if (snapshot.val().migrated) {
@@ -101,13 +117,12 @@ class Game extends Component {
             }
           });
           turnsRef = this.gameRef.child('turns');
-          boards = game.boards;
-          hands = game.hands;
-          playerNames = game.players;
-          playerCount = game.numPlayers;
+          boards = legacyGame.boards;
+          hands = legacyGame.hands;
+          playerNames = legacyGame.players;
+          playerCount = legacyGame.numPlayers;
           setUpGame();
         }
-
       }).catch((error) => {
         window.console.error(error);
       });

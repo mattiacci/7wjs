@@ -25,134 +25,141 @@ class Game extends Component {
   }
 
   componentDidMount() {
-    this.gameRef = firebase.database().ref(
-        `SevenWonders/${this.props.match.params.gameId}`);
-    var id = -1;
+    this.gameName = this.props.match.params.gameId;
+    this.legacyGameRef = firebase.database().ref(
+        `/SevenWonders/${this.gameName}`);
     // Get the value once to ensure the value exists locally before attempting
     // to run the transaction code.
-    this.gameRef.once('value').then((snapshot) => {
-      const game = snapshot.val();
-      this.gameRef.transaction(() => {
-        if (game == null) {
-          alert('Could not find a game with that name.');
-          return;
-        }
-        const joinedPlayers = game.players || [];
-        // check if player has already joined game
-        for (let i = 0; i < game.numPlayers; i++) {
-          if (joinedPlayers[i] === fakeAuth.name) {
-            id = i;
-            // start game
-            return game;
-          }
-        }
-
-        id = game.playersJoined;
-        if (id >= game.numPlayers) {
-          id = -1;
-          alert('Could not join: Game is full.');
-          return;
-        }
-
-        game.playersJoined++;
-        game.players = game.players || [];
-        game.players.push(fakeAuth.name);
-
-        return game;
-      }).then((result) => {
-        if (id < 0) {
-          return;
-        }
-
-        const legacyGame = result.snapshot.val();
-        const gameName = this.props.match.params.gameId;
-        var turnsRef, boards, hands, playerNames, playerCount;
-
-        const setUpGame = () => {
-          const interfaces = [];
-          const playerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, turnsRef, id, playerNames[id], true  /* isLocal */);
-          for (let i = 0; i < playerCount; i++) {
-            if (i === id) {
-              interfaces.push(playerInterface);
-            } else {
-              const remotePlayerInterface = new SevenWonders.PlayerInterface(this.handleDrawRequest, turnsRef, i, playerNames[i]);
-              interfaces.push(remotePlayerInterface);
+    this.legacyGameRef.once('value').then((snapshot) => {
+      const legacyGame = snapshot.val();
+      return legacyGame || Promise.reject(new Error(`No game named ${this.gameName}`));
+    }).then((legacyGame) => {
+      if (legacyGame.migrated) {
+        const key = legacyGame.migrated;
+        const activeGameRef = firebase.database().ref(`/games/active/${key}`);
+        const completedGameRef = firebase.database().ref(`/games/completed/${key}`);
+        Promise.all(
+            [activeGameRef.once('value'), completedGameRef.once('value')]).then((snapshots) => {
+          return snapshots[0].exists() ? activeGameRef : completedGameRef;
+        }).then((gameRef) => {
+          return gameRef.transaction((game) => {
+            if (game == null) {
+              return null;
             }
-          }
-          // Handle any new game action (e.g. card being built)
-          turnsRef.on('child_added', function(snapshot) {
-            const turn = snapshot.val();
-            const interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
-            interfaces[interfaceIndex].pendingTurns.push(turn);
-            interfaces[interfaceIndex].process();
-          });
-          this.currGame = new SevenWonders(interfaces, boards, hands, gameName.indexOf('wreck') === 0, this.endGame);
-        };
 
-        // TODO: Remove condition and refactor above after migration complete.
-        if (legacyGame.migrated) {
-          const key = legacyGame.migrated;
-          const gameStatus =
-              (legacyGame.completed === 'yes' || legacyGame.completed == null) ?
-              'completed' : 'active';
-          turnsRef = firebase.database().ref(`/gamedetails/${key}/turns`);
-          const promises = [];
-          promises.push(
-              firebase.database().ref(`/games/${gameStatus}/${key}`).once('value')
-                  .then((snapshot) => {
-                    playerCount = snapshot.val().playerCount;
-                    playerNames = snapshot.val().players || [];
-                  }));
-          promises.push(
-              firebase.database().ref(`/gamedetails/${key}`).once('value')
-                  .then((snapshot) => {
-                    boards = snapshot.val().boards;
-                    hands = snapshot.val().hands;
-                  }));
-          firebase.Promise.all(promises).then(setUpGame);
-        } else {
-          this.gameRef.on('value', (snapshot) => {
+            game.players = game.players || [];
+            if (game.players.indexOf(fakeAuth.name) > -1) {
+              return;
+            }
+            if (game.players.length >= game.playerCount) {
+              return;
+            }
+            game.players.push(fakeAuth.name);
+            return game;
+          });
+        }).then((result) => {
+          if (result.error) {
+            return Promise.reject(result.error);
+          }
+          if (!result.snapshot.exists()) {
+            return Promise.reject(new Error('Could not find game'));
+          }
+
+          const key = result.snapshot.key;
+          const game = result.snapshot.val();
+          this.gameDetailsRef = firebase.database().ref(`/gamedetails/${key}`);
+          return this.gameDetailsRef.once('value').then((snapshot) => {
+            const details = snapshot.val();
+            return {
+              boards: details.boards,
+              hands: details.hands,
+              name: game.name,
+              playerCount: game.playerCount,
+              playerNames: game.players,
+              turnsRef: this.gameDetailsRef.child('turns')
+            };
+          });
+        }).then(this.loadGame).catch((error) => {
+          window.console.error(error);
+        });
+      } else {
+        this.legacyGameRef.transaction((legacyGame) => {
+          if (legacyGame == null) {
+            return null;
+          }
+
+          legacyGame.players = legacyGame.players || [];
+          if (legacyGame.players.indexOf(fakeAuth.name) > -1) {
+            return;
+          }
+          if (legacyGame.playersJoined >= legacyGame.numPlayers) {
+            return;
+          }
+          legacyGame.playersJoined++;
+          legacyGame.players.push(fakeAuth.name);
+          return legacyGame;
+        }).then((result) => {
+          if (result.error) {
+            return Promise.reject(result.error);
+          }
+          if (!result.snapshot.exists()) {
+            return Promise.reject(new Error('Could not find legacy game'));
+          }
+
+          this.legacyGameRef.on('value', (snapshot) => {
             if (snapshot.val().migrated) {
               window.location.reload();
             }
           });
-          turnsRef = this.gameRef.child('turns');
-          boards = legacyGame.boards;
-          hands = legacyGame.hands;
-          playerNames = legacyGame.players;
-          playerCount = legacyGame.numPlayers;
-          setUpGame();
-        }
-      }).catch((error) => {
-        window.console.error(error);
-      });
+          const legacyGame = result.snapshot.val();
+          return {
+            boards: legacyGame.boards,
+            hands: legacyGame.hands,
+            name: result.snapshot.key,
+            playerCount: legacyGame.numPlayers,
+            playerNames: legacyGame.players,
+            turnsRef: this.legacyGameRef.child('turns')
+          };
+        }).then(this.loadGame).catch((error) => {
+          window.console.error(error);
+        });
+      }
     });
   }
 
   endGame = (scoreCard) => {
-    // TODO: Stop using transaction here.
-    this.gameRef.once('value').then((snapshot) => {
-      const game = snapshot.val();
-      if (game.completed === 'yes') {
-        this.setState({
-            scoreCard: scoreCard
-        });
+    // TODO: Remove legacy game-related code after data migration.
+    this.legacyGameRef.once('value').then((snapshot) => {
+      const legacyGame = snapshot.val();
+      if (legacyGame.completed !== 'yes') {
+        window.console.warn('moving legacy active game to completed');
+        return this.legacyGameRef.child('completed').set('yes').then(() => legacyGame);
       } else {
-        this.gameRef.transaction(() => {
-          if (game.completed === 'yes') {
-            return;
-          }
-
-          game.completed = "yes";
-          return game;
-        }).then(() => {
-          this.setState({
-            scoreCard: scoreCard
-          });
-        }).catch((error) => {
-          window.console.error(error);
-        });        
+        return legacyGame;
       }
+    }).then((legacyGame) => {
+      if (!legacyGame.migrated) {
+        return;
+      }
+      const key = legacyGame.migrated;
+      const activeGameRef = firebase.database().ref(`/games/active/${key}`);
+      return activeGameRef.once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          window.console.warn('moving migrated active game to completed');
+          const updates = {};
+          updates[`/games/active/${key}`] = null;
+          const completedGame = snapshot.val();
+          completedGame.completedAt = firebase.database.ServerValue.TIMESTAMP;
+          updates[`/games/completed/${key}`] = completedGame;
+          return firebase.database().ref().update(updates);
+        }
+      });
+    }).then(() => {
+      this.setState({
+        scoreCard: scoreCard
+      });
+    }).catch((error) => {
+      window.console.error(error);
     });
   }
 
@@ -161,6 +168,25 @@ class Game extends Component {
       data: data,
       actions: actions
     });
+  }
+
+  loadGame = (game) => {
+    const interfaces = [];
+    for (let i = 0; i < game.playerCount; i++) {
+      const playerInterface = new SevenWonders.PlayerInterface(
+          this.handleDrawRequest, game.turnsRef, i, game.playerNames[i],
+          game.playerNames[i] === fakeAuth.name  /* isLocal */);
+      interfaces.push(playerInterface);
+    }
+    // Handle any new game action (e.g. card being built)
+    game.turnsRef.on('child_added', function(snapshot) {
+      const turn = snapshot.val();
+      const interfaceIndex = interfaces.map((i) => i.id).indexOf(turn.id);
+      interfaces[interfaceIndex].pendingTurns.push(turn);
+      interfaces[interfaceIndex].process();
+    });
+    this.currGame = new SevenWonders(
+      interfaces, game.boards, game.hands, game.name.indexOf('wreck') === 0, this.endGame);
   }
 
   render() {
@@ -184,7 +210,12 @@ class Game extends Component {
   }
 
   componentWillUnmount = () => {
-    this.gameRef.off();
+    // TODO: Remove after data migration.
+    this.legacyGameRef.off();
+    this.legacyGameRef.child('turns').off();
+    if (this.gameDetailsRef) {
+      this.gameDetailsRef.child('turns').off();
+    }
   }
 }
 

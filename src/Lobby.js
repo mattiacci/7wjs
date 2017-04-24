@@ -5,6 +5,10 @@ import { Link, withRouter } from 'react-router-dom';
 import { AGE1DECK, AGE2DECK, AGE3DECK, WONDERS } from './misc.js';
 import './Lobby.css';
 
+const GAME_NAME_MAX_LENGTH = 24;
+const PLAYERS_MIN = 2;
+const PLAYERS_MAX = 7;
+
 function shuffleWonders(players) {
   const side = Math.random() < 0.5 ? 'A' : 'B';
   const boards = Array.prototype.slice.call(WONDERS);
@@ -61,20 +65,25 @@ const Lobby = withRouter(class extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      games: {},
+      activeGames: {},
+      completedGames: {},
+      legacyGames: {},
       showCompleted: false
     };
   }
 
   componentDidMount() {
     this.rootRef = firebase.database().ref('SevenWonders');
-    this.rootRef.on('child_added', (snapshot) => {
-      this.state.games[snapshot.key] = snapshot.val();
-      this.setState({ games: this.state.games });
+    this.rootRef.on('value', (snapshot) => {
+      this.setState({ legacyGames: snapshot.val() });
     });
-    this.rootRef.on('child_changed', (snapshot) => {
-      this.state.games[snapshot.key] = snapshot.val();
-      this.setState({ games: this.state.games });
+    this.activeGamesRef = firebase.database().ref('/games/active/').orderByChild('createdAt');
+    this.activeGamesRef.on('value', (snapshot) => {
+      this.setState({ activeGames: snapshot.val() });
+    });
+    this.completedGamesRef = firebase.database().ref('/games/completed/').orderByChild('completedAt');
+    this.completedGamesRef.on('value', (snapshot) => {
+      this.setState({ completedGames: snapshot.val() });
     });
   }
 
@@ -83,9 +92,9 @@ const Lobby = withRouter(class extends Component {
     const elements = e.target.elements;
     const gameName = elements['game'].value.trim().replace(/[^\w- ]/g, '');
     const numPlayers = parseInt(elements['players'].value, 10);
-    if (!gameName || gameName.length > 24 || !isFinite(numPlayers) ||
-        numPlayers < 2 || numPlayers > 7) {
-      alert('Enter a short name, with 2-7 players.');
+    if (!gameName || gameName.length > GAME_NAME_MAX_LENGTH || !isFinite(numPlayers) ||
+        numPlayers < PLAYERS_MIN || numPlayers > PLAYERS_MAX) {
+      alert(`Enter a short name, with ${PLAYERS_MIN}-${PLAYERS_MAX} players.`);
       return;
     }
 
@@ -97,7 +106,7 @@ const Lobby = withRouter(class extends Component {
           players: [],
           boards: shuffleWonders(numPlayers),
           hands: shuffleCards(numPlayers),
-          completed: 'no'
+          completed: 'no',
         };
       } else {
         game = undefined;
@@ -105,39 +114,67 @@ const Lobby = withRouter(class extends Component {
       }
       return game;
     }).then((result) => {
-      if (result.committed) {
-        this.props.history.push(
-            process.env.PUBLIC_URL + `/game/${result.snapshot.key}`);
+      if (!result.committed) {
+        return;
       }
+
+      // TODO: Replace old game info with this after all games migrated.
+      const legacyGame = result.snapshot.val();
+      const key = firebase.database().ref('/gamedetails').push().key;
+      const updates = {};
+      updates[`/SevenWonders/${gameName}/migrated`] = key;
+      updates[`/gamenames/${gameName}`] = key;
+      updates[`/games/active/${key}`] = {
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        name: gameName,
+        players: legacyGame.players || [],
+        playerCount: legacyGame.numPlayers
+      };
+      updates[`/gamedetails/${key}`] = {
+        boards: legacyGame.boards,
+        hands: legacyGame.hands,
+        turns: legacyGame.turns || []
+      };
+      return firebase.database().ref().update(updates);
+    }).then(() => {
+      this.props.history.push(process.env.PUBLIC_URL + `/game/${gameName}`);
+    }).catch((error) => {
+      window.console.error(error);
     });
   }
 
-  toggleShowCompleted = (e) => {
-    this.setState({ showCompleted: e.target.checked });
-  }
-
   render() {
-    const games = Object.keys(this.state.games).map(function(gameName) {
-      const game = this.state.games[gameName];
-      game.players = game.players || [];
-      // TODO: Fix data.
-      const completed = game.completed === 'yes' || game.completed == null;
-      if (completed && !this.state.showCompleted) {
-        return null;
-      } else {
-        return (
-          <tr key={gameName} className={completed ? 'Lobby-completed' : ''}>
-            <td>{gameName}</td>
-            <td>{game.players.join(', ')}</td>
-            <td>
-              <Link to={process.env.PUBLIC_URL + `/game/${gameName}`}>
-                <button>Join</button>
-              </Link>
-            </td>
-          </tr>
-        );
-      }
-    }.bind(this));
+    // TODO: Remove after data migration is complete.
+    const legacyGames = Object.keys(this.state.legacyGames)
+        .filter((gameName) => {
+          return !this.state.legacyGames[gameName].migrated;
+        }).map((gameName) => {
+          const game = this.state.legacyGames[gameName];
+          game.players = game.players || [];
+          // TODO: Fix data.
+          const completed = game.completed === 'yes' || game.completed == null;
+          if (completed && !this.state.showCompleted) {
+            return null;
+          } else {
+            return (
+              <tr key={gameName} className={completed ? 'Lobby-completed' : ''}>
+                <td>{gameName}</td>
+                <td>{game.players.join(', ')}</td>
+                <td>
+                  <Link to={process.env.PUBLIC_URL + `/game/${gameName}`}>
+                    <button>Join</button>
+                  </Link>
+                </td>
+              </tr>
+            );
+          }
+        });
+    const activeGames = Object.keys(this.state.activeGames).reverse()
+        .map((key) => this.state.activeGames[key]).map(this.renderGame);
+    const completedGames = this.state.showCompleted ?
+        Object.keys(this.state.completedGames).reverse()
+            .map((key) => this.state.completedGames[key]).map(this.renderGame): [];
+    const games = legacyGames.concat(activeGames, completedGames);
     return (
       <div className="Lobby">
         <div className="Lobby-input">
@@ -178,8 +215,29 @@ const Lobby = withRouter(class extends Component {
     );
   }
 
+  renderGame = (game) => {
+    game.players = game.players || [];
+    return (
+      <tr key={game.name} className={game.completedAt ? 'Lobby-completed' : ''}>
+        <td>{game.name}</td>
+        <td>{game.players.join(', ')}</td>
+        <td>
+          <Link to={process.env.PUBLIC_URL + `/game/${game.name}`}>
+            <button>Join</button>
+          </Link>
+        </td>
+      </tr>
+    );
+  }
+
+  toggleShowCompleted = (e) => {
+    this.setState({ showCompleted: e.target.checked });
+  }
+
   componentWillUnmount = () => {
     this.rootRef.off();
+    this.activeGamesRef.off();
+    this.completedGamesRef.off();
   }
 });
 

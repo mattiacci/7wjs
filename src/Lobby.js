@@ -67,16 +67,11 @@ const Lobby = withRouter(class extends Component {
     this.state = {
       activeGames: {},
       completedGames: {},
-      legacyGames: {},
       showCompleted: false
     };
   }
 
   componentDidMount() {
-    this.rootRef = firebase.database().ref('SevenWonders');
-    this.rootRef.on('value', (snapshot) => {
-      this.setState({ legacyGames: snapshot.val() });
-    });
     this.activeGamesRef = firebase.database().ref('/games/active/').orderByChild('createdAt');
     this.activeGamesRef.on('value', (snapshot) => {
       this.setState({ activeGames: snapshot.val() });
@@ -98,42 +93,26 @@ const Lobby = withRouter(class extends Component {
       return;
     }
 
-    this.rootRef.child(gameName).transaction((game) => {
-      if (game == null) {
-        game = {
-          numPlayers: numPlayers,
-          playersJoined: 0,
-          players: [],
-          boards: shuffleWonders(numPlayers),
-          hands: shuffleCards(numPlayers),
-          completed: 'no',
-        };
-      } else {
-        game = undefined;
-        alert('Game already exists, please pick a new name.');
+    firebase.database().ref(`/gamenames/${gameName}`).once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        const str = 'Game already exists. Please pick a new name.';
+        alert(str);
+        return Promise.reject(new Error(str));
       }
-      return game;
-    }).then((result) => {
-      if (!result.committed) {
-        return;
-      }
-
-      // TODO: Replace old game info with this after all games migrated.
-      const legacyGame = result.snapshot.val();
+    }).then(() => {
       const key = firebase.database().ref('/gamedetails').push().key;
       const updates = {};
-      updates[`/SevenWonders/${gameName}/migrated`] = key;
       updates[`/gamenames/${gameName}`] = key;
       updates[`/games/active/${key}`] = {
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         name: gameName,
-        players: legacyGame.players || [],
-        playerCount: legacyGame.numPlayers
+        players: [],
+        playerCount: numPlayers
       };
       updates[`/gamedetails/${key}`] = {
-        boards: legacyGame.boards,
-        hands: legacyGame.hands,
-        turns: legacyGame.turns || []
+        boards: shuffleWonders(numPlayers),
+        hands: shuffleCards(numPlayers),
+        turns: []
       };
       return firebase.database().ref().update(updates);
     }).then(() => {
@@ -144,37 +123,12 @@ const Lobby = withRouter(class extends Component {
   }
 
   render() {
-    // TODO: Remove after data migration is complete.
-    const legacyGames = Object.keys(this.state.legacyGames)
-        .filter((gameName) => {
-          return !this.state.legacyGames[gameName].migrated;
-        }).map((gameName) => {
-          const game = this.state.legacyGames[gameName];
-          game.players = game.players || [];
-          // TODO: Fix data.
-          const completed = game.completed === 'yes' || game.completed == null;
-          if (completed && !this.state.showCompleted) {
-            return null;
-          } else {
-            return (
-              <tr key={gameName} className={completed ? 'Lobby-completed' : ''}>
-                <td>{gameName}</td>
-                <td>{game.players.join(', ')}</td>
-                <td>
-                  <Link to={process.env.PUBLIC_URL + `/game/${gameName}`}>
-                    <button>Join</button>
-                  </Link>
-                </td>
-              </tr>
-            );
-          }
-        });
     const activeGames = Object.keys(this.state.activeGames).reverse()
         .map((key) => this.state.activeGames[key]).map(this.renderGame);
     const completedGames = this.state.showCompleted ?
         Object.keys(this.state.completedGames).reverse()
             .map((key) => this.state.completedGames[key]).map(this.renderGame): [];
-    const games = legacyGames.concat(activeGames, completedGames);
+    const games = activeGames.concat(completedGames);
     return (
       <div className="Lobby">
         <div className="Lobby-input">
@@ -235,7 +189,6 @@ const Lobby = withRouter(class extends Component {
   }
 
   componentWillUnmount = () => {
-    this.rootRef.off();
     this.activeGamesRef.off();
     this.completedGamesRef.off();
   }

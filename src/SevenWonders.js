@@ -758,9 +758,24 @@ const SevenWonders = function() {
   this.getKnownGameStateForPlayer = function(playerState) {
     const state = JSON.parse(JSON.stringify(this.cachedPublicGameState));
 
+    // Update waiting state of players.
+    for (let i = 0; i < state.players.length; i++) {
+      state.players[i].waiting = this.playerInterfaces[i].currTurnEnded;
+    }
+
+    // Rearrange players so given player comes first.
+    const rearrangedPlayers = [];
+    for (let i = playerState.playerInterface.id; i < state.players.length; i++) {
+      rearrangedPlayers.push(state.players[i]);
+    }
+    for (let i = 0; i < playerState.playerInterface.id; i++) {
+      rearrangedPlayers.push(state.players[i]); 
+    }
+    state.players = rearrangedPlayers;
+
+    // Add player's hand to state.
     const hand = JSON.parse(JSON.stringify(playerState.playerInterface.currHand));
     const turn = playerState.playerInterface.currTurn;
-    // Add data to cards in hand.
     hand.forEach(function(card) {
       card.unplayable = !canPlay(
           playerState,
@@ -771,26 +786,8 @@ const SevenWonders = function() {
           card,
           turn.free || playerState.canBuildForFree[turn.age]);
     });
-
-    // Update waiting state of players.
-    for (let i = 0; i < state.players.length; i++) {
-      state.players[i].waiting = this.playerInterfaces[i].currTurnEnded;
-    }
-    // Rearrange players so given player comes first.
-    const rearrangedPlayers = [];
-    for (let i = playerState.playerInterface.id; i < state.players.length; i++) {
-      rearrangedPlayers.push(state.players[i]);
-    }
-    for (let i = 0; i < playerState.playerInterface.id; i++) {
-      rearrangedPlayers.push(state.players[i]); 
-    }
-
-    // Update state object with current data.
-    state.players = rearrangedPlayers;
-    state.players[0].built = JSON.parse(JSON.stringify(playerState.built));
     state.players[0].cardsInHand = hand;
-    state.players[0].wonder.built =
-        JSON.parse(JSON.stringify(playerState.stagesBuilt));
+    
     return state;
   };
 

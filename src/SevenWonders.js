@@ -769,7 +769,7 @@ const SevenWonders = function() {
       rearrangedPlayers.push(state.players[i]);
     }
     for (let i = 0; i < playerState.playerInterface.id; i++) {
-      rearrangedPlayers.push(state.players[i]); 
+      rearrangedPlayers.push(state.players[i]);
     }
     state.players = rearrangedPlayers;
 
@@ -787,7 +787,7 @@ const SevenWonders = function() {
           turn.free || playerState.canBuildForFree[turn.age]);
     });
     state.players[0].cardsInHand = hand;
-    
+
     return state;
   };
 

@@ -25,7 +25,8 @@ const CardType = {
   ENGINEERING: 6, // Green Gear
   LITERATURE: 7, // Green Tablet
   VICTORY: 8,  // Blue
-  WONDER: 9
+  WONDER: 9,
+  LEADER: 10  // White
 };
 
 const TradeCost = {
@@ -41,7 +42,8 @@ const Scoring = {
   VICTORY: 3,
   COMMERCE: 4,
   GUILD: 5,
-  SCIENCE: 6
+  SCIENCE: 6,
+  LEADER: 7
 };
 
 var Action = {
@@ -71,6 +73,9 @@ const Wonder = function(name, resource, stage1A, stage2A, stage3A, stage1B, stag
     this.stages.push(stage4B);
   }
 };
+const makeLeader = function(name, cost, rewards, tooltip) {
+  return new Card(name, 0, [cost], CardType.LEADER, rewards, 0, tooltip);
+}
 
 const scienceScore = function(scores) {
   return scores[0] * scores[0] + scores[1] * scores[1] + scores[2] * scores[2] + 7 * Math.min.apply(null, scores);
@@ -366,12 +371,20 @@ const AGE3DECK = [
   new Card('Magistrates Guild', 3, [[Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.STONE, Resource.CLOTH]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.VICTORY], false, true, 0, 1), 0, 'Yields 1 victory point for every blue card your neighbours have.'),
   new Card('Philosophers Guild', 3, [[Resource.CLAY, Resource.CLAY, Resource.CLAY, Resource.PAPER, Resource.CLOTH]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE], false, true, 0, 1), 0, 'Yields 1 victory point for every green card your neighbours have.'),
   new Card('Scientists Guild', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.ORE, Resource.PAPER]], CardType.GUILD, anyScienceReward(), 0, 'Enhances a science of your choice.'),
-  new Card('Shipowners Guild', 3, [[Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.GLASS, Resource.PAPER]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.RESOURCE, CardType.GOODS, CardType.GUILD], true, false, 0, 1), 0, 'Yields 1 victory points for every brown, grey or purple card.'),
+  new Card('Shipowners Guild', 3, [[Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.GLASS, Resource.PAPER]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.RESOURCE, CardType.GOODS, CardType.GUILD], true, false, 0, 1), 0, 'Yields 1 victory point for every brown, grey or purple card.'),
   new Card('Spies Guild', 3, [[Resource.CLAY, Resource.CLAY, Resource.CLAY, Resource.GLASS]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.MILITARY], false, true, 0, 1), 0, 'Yields 1 victory point for every red card your neighbours have.'),
   new Card('Strategists Guild', 3, [[Resource.ORE, Resource.ORE, Resource.STONE, Resource.CLOTH]], CardType.GUILD, strategistReward(), 0, 'Yields 1 victory point for every combat loss token your neighbours have.'),
   new Card('Traders Guild', 3, [[Resource.GLASS, Resource.CLOTH, Resource.PAPER]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.COMMERCE], false, true, 0, 1), 0, 'Yields 1 victory point for every yellow card your neighbours have.'),
   new Card('Workers Guild', 3, [[Resource.ORE, Resource.ORE, Resource.CLAY, Resource.STONE, Resource.WOOD]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.RESOURCE], false, true, 0, 1), 0, 'Yields 1 victory point for every brown card your neighbours have.'),
-
+  new Card('Architects Guild', 3, [[Resource.ORE, Resource.ORE, Resource.ORE, Resource.CLAY, Resource.PAPER, Resource.CLOTH]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.GUILD], false, true, 0, 3), 0, 'Yields 3 victory points for every purple card your neighbours have.'),
+  // Courtesans Guild. Copy a leader.
+  new Card('Diplomats Guild', 3, [[Resource.STONE, Resource.WOOD, Resource.GLASS, Resource.PAPER]], CardType.GUILD, complexReward(Scoring.GUILD, [CardType.LEADER], false, true, 0, 1), 0, 'Yields 1 victory point for every leader your neighbours have.'),
+  new Card('Gamers Guild', 3, [[Resource.STONE, Resource.CLAY, Resource.WOOD, Resource.ORE]], CardType.GUILD, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.GUILD, points: Math.floor(player.gold / 3)};
+    });
+  }, 0, 'Yields 1 victory point for every 3 gold.'),
+  
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 3, 'Provides 3 units of military strength.'),
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 4, 'Provides 3 units of military strength.'),
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 7, 'Provides 3 units of military strength.'),
@@ -436,7 +449,7 @@ const freeBuildReward = function() {
   };
 };
 
-const PlayerState = function(board, side, playerInterface) {
+const PlayerState = function(board, side, playerInterface, isLeadersGame) {
   this.sciences = {};
   this.sciences[Science.ACADEMICS] = 0;
   this.sciences[Science.ENGINEERING] = 0;
@@ -461,11 +474,12 @@ const PlayerState = function(board, side, playerInterface) {
   this.side = side;
   this.stagesBuilt = [];
   this.playerInterface = playerInterface;
-  this.gold = 3;
+  this.gold = isLeadersGame ? 6 : 3;
   this.military = 0;
   this.multiResources = [];
   this.battleTokens = [];
   this.built = [];
+  this.leaders = [];
   this.endGameRewards = [];
   this.canDoubleBuild = false;
   this.playDiscardedNow = false;
@@ -478,6 +492,7 @@ const PlayerState = function(board, side, playerInterface) {
   this.victoryPoints[Scoring.COMMERCE] = 0;
   this.victoryPoints[Scoring.GUILD] = 0;
   this.victoryPoints[Scoring.SCIENCE] = 0;
+  this.victoryPoints[Scoring.LEADER] = 0;
   this.currentScore = [];
   this.scoreTotal = 0;
 
@@ -513,6 +528,7 @@ const clonePlayers = function(players) {
     }));
     clone.battleTokens = Array.prototype.slice.call(player.battleTokens);
     clone.built = Array.prototype.slice.call(player.built);
+    clone.leaders = Array.prototype.slice.call(player.leaders);
     clone.endGameRewards = []; // not cloned
     clone.canDoubleBuild = player.canDoubleBuild; // Babylon B
     clone.playDiscardedNow = player.playDiscardedNow; // Halikarnassos
@@ -647,11 +663,91 @@ const WONDERS = [
   ),
 ];
 
+const LEADERS = [
+  makeLeader('Alexander', 3, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: player.battleTokens.filter((t) => t !== -1).length};
+    });
+  }, 'Yields 1 victory point for every victory token.'),
+  makeLeader('Amytis', 4, complexReward(Scoring.LEADER, [CardType.WONDER], true, false, 0, 2), 'Yields 2 victory points for every wonder stage built.'),
+  // Archimedes. Green cards cost one less resource.
+  makeLeader('Aristotle', 3, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: 3 * Math.min(player.sciences[Science.ACADEMICS], player.sciences[Science.ENGINEERING], player.sciences[Science.LITERATURE])};
+    });
+  }, 'Yields 3 victory points for every completed set of Sciences.'),
+  // Bilkis. Once per turn, resources may be purchased from the bank for 1 gold.
+  makeLeader('Caesar', 5, militaryReward(2), 'Provides 2 units of military strength.'),
+  makeLeader('Cleopatra', 4, pointsReward(5, Scoring.LEADER), 'Yields 5 victory points.'),
+  makeLeader('Croesus', 1, goldReward(6), 'Produces 6 gold.'),
+  // Diocletian. Wat.
+  makeLeader('Euclid', 5, scienceReward(Science.ACADEMICS), 'Enchances academics.'),
+  // Hammurabi. Blue cards cost one less resource.
+  makeLeader('Hannibal', 2, militaryReward(1), 'Provides 1 unit of military strength.'),
+  // Hatshepsut. Whenever you pay a neighbor, gain 1 gold.
+  makeLeader('Hiram', 3, complexReward(Scoring.LEADER, [CardType.GUILD], true, false, 0, 2), 'Yields 2 victory points for every purple card.'),
+  makeLeader('Hypatia', 4, complexReward(Scoring.LEADER, [CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE], true, false, 0, 1), 'Yields 1 victory point for every green card.'),
+  // Imhotep. Wonder stages cost one less resource.
+  makeLeader('Justinian', 3, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: 3 * Math.min(
+        countCards(player, [CardType.MILITARY]),
+        countCards(player, [CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE]),
+        countCards(player, [CardType.VICTORY])
+      )};
+    });
+  }, 'Yields 3 victory points for every set of Red, Blue and Green cards.'),
+  // Leonidas. Red cards cost one less resource.
+  makeLeader('Louis', 4, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: 7 - player.battleTokens.filter((t) => t !== -1).length};
+    });
+  }, 'Yields 7 victory points less 1 point for every victory token.'),
+  // Maecenas. White cards are free.
+  makeLeader('Midas', 3, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: Math.floor(player.gold / 3)};
+    });
+  }, 'Yields 1 victory point for every 3 gold.'),
+  makeLeader('Nebuchadnezzar', 4, complexReward(Scoring.LEADER, [CardType.VICTORY], true, false, 0, 1), 'Yields 1 victory point for every blue card.'),
+  makeLeader('Nefertiti', 3, pointsReward(4, Scoring.LEADER), 'Yields 4 victory points.'),
+  // Nero. Whenever you gain a victory token, gain 2 gold.
+  makeLeader('Pericles', 6, complexReward(Scoring.LEADER, [CardType.MILITARY], true, false, 0, 2), 'Yields 2 victory points for every red card.'),
+  makeLeader('Phidias', 3, complexReward(Scoring.LEADER, [CardType.RESOURCE], true, false, 0, 1), 'Yields 1 victory point for every brown card.'),
+  makeLeader('Plato', 4, (player) => {
+    player.endGameRewards.push((player) => {
+      return {type: Scoring.LEADER, points: 7 * Math.min(
+        countCards(player, [CardType.RESOURCES]),
+        countCards(player, [CardType.GOODS]),
+        countCards(player, [CardType.VICTORY]),
+        countCards(player, [CardType.COMMERCE]),
+        countCards(player, [CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE]),
+        countCards(player, [CardType.MILITARY]),
+        countCards(player, [CardType.GUILD])
+      )};
+    });
+  }, 'Yields 7 victory points for every set of all Age cards.'),
+  makeLeader('Praxiteles', 3, complexReward(Scoring.LEADER, [CardType.GOODS], true, false, 0, 2), 'Yields 2 victory points for every grey card.'),
+  makeLeader('Ptolemy', 5, scienceReward(Science.LITERATURE), 'Enchances literature.'),
+  makeLeader('Euclid', 5, scienceReward(Science.ENGINEERING), 'Enchances engineering.'),
+  // Ramses. Purple cards are free.
+  makeLeader('Sappho', 1, pointsReward(2, Scoring.LEADER), 'Yields 2 victory points.'),
+  // Semiramis. Wat.
+  makeLeader('Solomon', 3, discardedReward(), 'Play a card from the discard pile for free.'),
+  // Stevie. When building a wonder stage using Stevie, pay gold equal to the number of resources required instead.
+  // Tomyris. Whenever you are to gain a defeat token, your neighbor takes it instead.
+  makeLeader('Varro', 3, complexReward(Scoring.LEADER, [CardType.COMMERCE], true, false, 0, 1), 'Yields 1 victory point for every yellow card.'),
+  // Vitruvius. Whenever you build an Age card by fulfilling its prerequisites, gain 2 gold.
+  // Xenophon. Whenever you build a yellow card, gain 2 gold.
+  makeLeader('Zenobia', 2, pointsReward(3, Scoring.LEADER), 'Yields 3 victory points.')
+];
+
 export {
   AGE1DECK,
   AGE2DECK,
   AGE3DECK,
   WONDERS,
+  LEADERS,
   Action,
   CardType,
   PlayerState,

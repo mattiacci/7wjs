@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as firebase from 'firebase';
 import { Link, withRouter } from 'react-router-dom';
-import { AGE1DECK, AGE2DECK, AGE3DECK, WONDERS } from './misc.js';
+import { AGE1DECK, AGE2DECK, AGE3DECK, WONDERS, LEADERS } from './misc.js';
 import './Lobby.css';
 
 const GAME_NAME_MAX_LENGTH = 24;
@@ -22,7 +22,7 @@ function shuffleWonders(players) {
   return output;
 }
 
-function shuffleCards(players) {
+function shuffleCards(players, isLeadersGame) {
   const decks = [];
   decks[0] = AGE1DECK.filter(function(card) {
     return card.minPlayers <= players;
@@ -31,15 +31,32 @@ function shuffleCards(players) {
     return card.minPlayers <= players;
   });
   const guildsToDiscard = 8 - players;
-  const guilds = AGE3DECK.filter(function(card) {
+  let guilds = AGE3DECK.filter(function(card) {
     return card.minPlayers === 0;
   });
+  // Leaders only guilds
+  if (!isLeadersGame) {
+    guilds = guilds.filter((card) => {
+      return card.name !== 'Courtesans Guild' && card.name !== 'Diplomats Guild';
+    });
+  }
   for (var i = 0; i < guildsToDiscard; i++) {
     guilds.splice(Math.floor(Math.random() * guilds.length), 1);
   }
   decks[2] = AGE3DECK.filter(function(card) {
     return card.minPlayers <= players && card.minPlayers > 0;
   }).concat(guilds);
+  // Leaders
+  if (isLeadersGame) {
+    var leadersCards = LEADERS.slice(0);
+    // TODO: Consider Roma B where player may draw more leader cards.
+    var leadersToRetain = 4 * players;
+    while (leadersCards.length > leadersToRetain) {
+      leadersCards.splice(Math.floor(Math.random() * leadersCards.length), 1);
+    }
+    decks[3] = leadersCards;
+  }
+      
   // Deal
   const hands = [];
   for (let i = 0; i < 3; i++) {
@@ -54,6 +71,19 @@ function shuffleCards(players) {
     }
   }
 
+  // Leaders
+  if (isLeadersGame) {
+    hands[3] = [];
+    for (let j = 0; j < players; j++) {
+      const hand = [];
+      for (let k = 0; k < 4; k++) {
+        const card = decks[3].splice(Math.floor(Math.random() * decks[3].length), 1)[0];
+        hand.push({name: card.name, minPlayers: 0, age: 0});
+      }
+      hands[3].push(hand);
+    }
+  }
+  
   return hands;
 }
 
@@ -86,6 +116,7 @@ const Lobby = withRouter(class extends Component {
     e.preventDefault();
     const elements = e.target.elements;
     const gameName = elements['game'].value.trim().replace(/[^\w- ]/g, '');
+    const isLeadersGame = gameName.indexOf('lead') === 0;
     const numPlayers = parseInt(elements['players'].value, 10);
     if (!gameName || gameName.length > GAME_NAME_MAX_LENGTH || !isFinite(numPlayers) ||
         numPlayers < PLAYERS_MIN || numPlayers > PLAYERS_MAX) {
@@ -109,9 +140,10 @@ const Lobby = withRouter(class extends Component {
         players: [],
         playerCount: numPlayers
       };
+      // TODO: Leaders
       updates[`/gamedetails/${key}`] = {
         boards: shuffleWonders(numPlayers),
-        hands: shuffleCards(numPlayers),
+        hands: shuffleCards(numPlayers, isLeadersGame),
         turns: []
       };
       return firebase.database().ref().update(updates);

@@ -122,7 +122,7 @@ class Game extends Component {
       interfaces[interfaceIndex].process();
     });
     this.currGame = new SevenWonders(
-      interfaces, game.boards, game.hands, game.name.indexOf('wreck') === 0, this.endGame);
+      interfaces, game.boards, game.hands, game.name.indexOf('wreck') === 0, this.endGame, game.name.indexOf('lead') === 0);
   }
 
   render() {

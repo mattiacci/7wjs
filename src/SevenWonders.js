@@ -3,6 +3,7 @@ import {
   AGE2DECK,
   AGE3DECK,
   WONDERS,
+  LEADERS,
   Action,
   CardType,
   PlayerState,
@@ -25,7 +26,7 @@ const getCard = function(details) {
     return null;
   }
 
-  var fetched = AGE1DECK.concat(AGE2DECK).concat(AGE3DECK).filter(function(card) {
+  var fetched = AGE1DECK.concat(AGE2DECK).concat(AGE3DECK).concat(LEADERS).filter(function(card) {
     var minP = Math.max(3, details.minPlayers);
     var minP2 = Math.max(3, card.minPlayers);
     return card.name === details.name && minP === minP2 && card.age === details.age;
@@ -469,7 +470,7 @@ const verify = function(player, card, payment) {
         if (payment.east.length !== 0 || payment.west.length !== 0) {
           console.log('ERROR: attempting to pay neighbors unnecessarily');
           return false;
-        } else if (player.gold >= cost && payment.bank === cost) {
+        } else if (player.gold >= cost && payment.bank !== 0) {
           console.log('gold ok');
           return true;
         } else if (player.gold < cost) {
@@ -659,6 +660,68 @@ const Turn = function(player, game, hands, index, free) {
   };
 };
 
+const LeadersDraftTurn = function(player, game, hands, index) {
+  this.playerState = player;
+  this.game = game;
+  this.age = game.age;
+  this.played = false;
+  this.undoStack = [];
+  var self = this;
+  this.undo = function() {
+    while(this.undoStack.length > 0) {
+      this.undoStack.pop()();
+    }
+    window.setTimeout(game.resume.bind(game), 0);
+  }
+  this.play = function(action, card) {
+    console.log(player, game, hands, index, action, card);
+
+    if (action === Action.UNDO) {
+      if (this.played) {
+        this.undo();
+        return true;
+      } else {
+        console.log('ERROR: attempting to undo without first taking an action');
+        return false;
+      }
+    }
+    
+    if (this.played) {
+      console.log('ERROR: already played this turn. ignoring attempt');
+      return false;
+    }
+    if (hands[index].indexOf(card) === -1) {
+      console.log('ERROR: attempting to play card that is not in hand.');
+      return false;
+    }
+
+    player.leaders.push(card);
+    this.undoStack.push(function() {
+      player.leaders.pop();
+    });
+    
+    for (let i = 0; i < hands[index].length; i++) {
+      if (hands[index][i] === card) {
+        hands[index].splice(i, 1);
+        this.undoStack.push(function() {
+          hands[index].splice(i, 0, card)
+        });
+        break;
+      }
+    }
+    this.played = true;
+    game.playersDone++;
+    this.undoStack.push(function() {
+      game.playersDone--;
+      self.played = false;
+    });
+
+    game.checkEndLeadersDraftRound();
+
+    return true;
+  };
+};
+
 const SevenWonders = function() {
   this.resume = function() {
     for (var i = 0; i < this.numPlayers; i++) {
@@ -666,10 +729,11 @@ const SevenWonders = function() {
     }
   };
 
-  this.init = function(interfaces, boards, hands, wreck, endGame) {
+  this.init = function(interfaces, boards, hands, wreck, endGame, leaders) {
     this.numPlayers = interfaces.length;
     this.playerInterfaces = interfaces.slice(0);
     this.wreckANation = !!wreck;
+    this.leaders = !!leaders;
     this.endGameCallback = endGame;
 
     // Set up players
@@ -678,12 +742,12 @@ const SevenWonders = function() {
       boards = Array.prototype.slice.call(WONDERS);
       var side = Math.random() < 0.5 ? 'A' : 'B';
       this.players = this.playerInterfaces.map(function(playerInterface) {
-        return new PlayerState(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], side, playerInterface);
+        return new PlayerState(boards.splice(Math.floor(Math.random() * boards.length), 1)[0], side, playerInterface, this.leaders);
       });
     } else {
       this.players = [];
       for (var i = 0; i < len; i++) {
-        this.players.push(new PlayerState(getBoard(boards[i].name), boards[i].side, this.playerInterfaces[i]));
+        this.players.push(new PlayerState(getBoard(boards[i].name), boards[i].side, this.playerInterfaces[i], this.leaders));
       }
     }
 
@@ -704,20 +768,39 @@ const SevenWonders = function() {
       decks[0] = AGE1DECK.filter(function(card) {
         return card.minPlayers <= len;
       });
+      
       decks[1] = AGE2DECK.filter(function(card) {
         return card.minPlayers <= len;
       });
+      
       var guildsToDiscard = 8 - len;
       var guilds = AGE3DECK.filter(function(card) {
         return card.minPlayers === 0;
       });
+      // Leaders only guilds
+      if (!this.leaders) {
+        guilds = guilds.filter((card) => {
+          return card.name !== 'Courtesans Guild' && card.name !== 'Diplomats Guild';
+        });
+      }
       for (let i = 0; i < guildsToDiscard; i++) {
         guilds.splice(Math.floor(Math.random() * guilds.length), 1);
       }
       decks[2] = AGE3DECK.filter(function(card) {
         return card.minPlayers <= len && card.minPlayers > 0;
       }).concat(guilds);
-
+      
+      // Leaders
+      if (this.leaders) {
+        var leadersCards = LEADERS.slice(0);
+        // TODO: Consider Roma B where player may draw more leader cards.
+        var leadersToRetain = 4 * len;
+        while (leadersCards.length > leadersToRetain) {
+          leadersCards.splice(Math.floor(Math.random() * leadersCards.length), 1);
+        }
+        decks[3] = leadersCards;
+      }
+      
       // Deal
       this.hands = [];
       for (let i = 0; i < 3; i++) {
@@ -728,6 +811,17 @@ const SevenWonders = function() {
             hand.push(decks[i].splice(Math.floor(Math.random() * decks[i].length), 1)[0]);
           }
           this.hands[i].push(hand);
+        }
+      }
+      // Leaders
+      if (this.leaders) {
+        this.hands[3] = [];
+        for (let j = 0; j < len; j++) {
+          hand = [];
+          for (let k = 0; k < 4; k++) {
+            hand.push(decks[3].splice(Math.floor(Math.random() * decks[3].length), 1)[0]);
+          }
+          this.hands[3].push(hand);
         }
       }
     } else {
@@ -848,8 +942,37 @@ const SevenWonders = function() {
     }
   };
 
+  this.playLeadersRound = function() {
+    console.log('playLeaderRound');
+    console.log(this.hands, this.age, this.numPlayers);
+    this.updateCurrentScores();
+    for (let i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].update(Array.prototype.slice.call(this.players[i].leaders), new Turn(this.players[i], this, this.players.map((p) => p.leaders), i));
+    }
+    this.cachePublicGameState();
+    for (let i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].play();
+    }
+  };
+  
+  this.playLeadersDraftRound = function() {
+    console.log('playerLeaderPhase');
+    console.log(this.hands, this.numPlayers);
+    for (let i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].update(Array.prototype.slice.call(this.hands[3][i]), new LeadersDraftTurn(this.players[i], this, this.hands[3], i));
+    }
+    this.cachePublicGameState();
+    for (let i = 0; i < this.numPlayers; i++) {
+      this.playerInterfaces[i].play();
+    }
+  };
+
   this.start = function() {
-    this.playRound();
+    if (this.leaders) {
+      this.playLeadersDraftRound();
+    } else {
+      this.playRound();
+    }
   };
 
   this.updateCurrentScores = function() {
@@ -999,16 +1122,41 @@ const SevenWonders = function() {
           this.endGame();
           return;
         }
+        if (this.leaders) {
+          this.round = -1;
+          this.playLeadersRound();
+        } else {
+          this.playRound();
+        }
       } else {
         if (this.age % 2 !== 0) {
           this.hands[this.age].push(this.hands[this.age].shift());
         } else {
           this.hands[this.age].unshift(this.hands[this.age].pop());
         }
+        this.playRound();
       }
-      this.playRound();
     }
   };
+  
+  this.checkEndLeadersDraftRound = function() {
+    var len = this.numPlayers;
+    // If all players have played, execute rewards
+    if (this.playersDone === len) {
+      this.playersDone = 0;
+
+      // rotate hands, go to next round
+      this.round++;
+      if (this.round === 4) {
+        this.round = -1;
+        this.playLeadersRound();
+      } else {
+        this.hands[3].push(this.hands[3].shift());
+        this.playLeadersDraftRound();
+      }
+    }
+  };
+  
   if (arguments.length > 1) {
     this.init.apply(this, arguments);
   }

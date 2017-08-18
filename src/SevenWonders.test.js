@@ -15,7 +15,7 @@ it('starts game and passes state and actions only to local player', () => {
         remotePlayerStateUpdateHandler, turnsRef, i, String(i), false));
   }
   const endGameHandler = jest.fn();
-  const game = new SevenWonders(playerInterfaces, WONDERS, HANDS, false, endGameHandler);
+  const game = new SevenWonders(playerInterfaces, WONDERS, HANDS, false, endGameHandler, false);
   expect(endGameHandler).not.toHaveBeenCalled();
   expect(remotePlayerStateUpdateHandler).not.toHaveBeenCalled();
   expect(turnsRef).toHaveLength(0);

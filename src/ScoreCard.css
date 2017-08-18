@@ -1,7 +1,7 @@
 .ScoreCard {
   background-repeat: no-repeat;
   background-size: contain;
-  padding: 10px 0 10px 41px;
+  padding-left: 36px;
   text-align: right;
 }
 .ScoreCard td {

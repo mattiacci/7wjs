@@ -30,7 +30,7 @@ function shuffleCards(players, isLeadersGame) {
   decks[1] = AGE2DECK.filter(function(card) {
     return card.minPlayers <= players;
   });
-  const guildsToDiscard = 8 - players;
+  const guildsToRetain = 2 + players;
   let guilds = AGE3DECK.filter(function(card) {
     return card.minPlayers === 0;
   });
@@ -40,6 +40,7 @@ function shuffleCards(players, isLeadersGame) {
       return card.name !== 'Courtesans Guild' && card.name !== 'Diplomats Guild';
     });
   }
+  const guildsToDiscard = guilds.length - guildsToRetain;
   for (var i = 0; i < guildsToDiscard; i++) {
     guilds.splice(Math.floor(Math.random() * guilds.length), 1);
   }

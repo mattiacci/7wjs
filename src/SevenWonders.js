@@ -567,6 +567,18 @@ const Turn = function(player, game, hands, index, free) {
         });
       } else if (verify(player, card, payment)) {
         player.built.push(card);
+        
+        // Update payment to bank
+        if (payment.bank > 0) {
+          for (let i = card.cost.length - 1; i > -1; i--) {
+            const cost = card.cost[i];
+            if (typeof cost === 'number') {
+              payment.bank = cost;
+              break;
+            }
+          }
+        }
+        
         const payNeighboursFn = payNeighbours(player, payment);
         game.endOfRoundPayments.push(payNeighboursFn);
         this.undoStack.push(function() {
@@ -773,7 +785,7 @@ const SevenWonders = function() {
         return card.minPlayers <= len;
       });
       
-      var guildsToDiscard = 8 - len;
+      var guildsToRetain = 2 + len;
       var guilds = AGE3DECK.filter(function(card) {
         return card.minPlayers === 0;
       });
@@ -783,6 +795,7 @@ const SevenWonders = function() {
           return card.name !== 'Courtesans Guild' && card.name !== 'Diplomats Guild';
         });
       }
+      var guildsToDiscard = guilds.length - guildsToRetain;
       for (let i = 0; i < guildsToDiscard; i++) {
         guilds.splice(Math.floor(Math.random() * guilds.length), 1);
       }

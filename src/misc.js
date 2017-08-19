@@ -717,7 +717,7 @@ const LEADERS = [
   makeLeader('Plato', 4, (player) => {
     player.endGameRewards.push((player) => {
       return {type: Scoring.LEADER, points: 7 * Math.min(
-        countCards(player, [CardType.RESOURCES]),
+        countCards(player, [CardType.RESOURCE]),
         countCards(player, [CardType.GOODS]),
         countCards(player, [CardType.VICTORY]),
         countCards(player, [CardType.COMMERCE]),

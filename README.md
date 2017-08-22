@@ -4,8 +4,9 @@
 
 ### Install NodeJS 6.x
 
-On Debian or Ubuntu-based Linux distros, including Bash on Ubuntu on Windows
-(only Creators Update or later), you can do this by running:
+On Debian or Ubuntu-based Linux distros, including
+[Ubuntu on Windows 10 via WSL](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide#for-anniversary-update-and-creators-update-install-using-lxrun),
+you can do this by running:
 ```
 curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 sudo apt-get install -y build-essential nodejs
@@ -53,7 +54,7 @@ npm test        // Runs tests, of course.
 
 ```
 npm run build
-rsync -av --chmod=D2775,F664 build/ <user>@<domain>:<absolute-path>/
+rsync -av --chmod=u=rwX,go=rX build/ <user>@<domain>:<absolute-path>/
 ```
 
 Note: `npm run build` uses your `.env` file(s) to build, so make sure you

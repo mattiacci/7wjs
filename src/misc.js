@@ -729,7 +729,7 @@ const LEADERS = [
   }, 'Yields 7 victory points for every set of all Age cards.'),
   makeLeader('Praxiteles', 3, complexReward(Scoring.LEADER, [CardType.GOODS], true, false, 0, 2), 'Yields 2 victory points for every grey card.'),
   makeLeader('Ptolemy', 5, scienceReward(Science.LITERATURE), 'Enchances literature.'),
-  makeLeader('Euclid', 5, scienceReward(Science.ENGINEERING), 'Enchances engineering.'),
+  makeLeader('Pythagoras', 5, scienceReward(Science.ENGINEERING), 'Enchances engineering.'),
   // Ramses. Purple cards are free.
   makeLeader('Sappho', 1, pointsReward(2, Scoring.LEADER), 'Yields 2 victory points.'),
   // Semiramis. Wat.

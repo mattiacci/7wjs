@@ -4,13 +4,16 @@
 
 ### Install NodeJS 6.x
 
-On Debian or Ubuntu-based Linux distros, including Bash on Ubuntu on Windows (only Creators Update or later), you can do this by running:
+On Debian or Ubuntu-based Linux distros, including Bash on Ubuntu on Windows
+(only Creators Update or later), you can do this by running:
 ```
 curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 sudo apt-get install -y build-essential nodejs
 ```
 
-You can find [instructions for other operating systems](https://nodejs.org/en/download/package-manager/) at nodejs.org.
+You can find
+[instructions for other operating systems](https://nodejs.org/en/download/package-manager/)
+at nodejs.org.
 
 ### Install Project Dependencies
 
@@ -24,15 +27,18 @@ npm install
 ### Config
 
 Once that is complete, create a file named `.env` in the project's top-level
-directory: This will contain any server-specific information:
+directory, which holds environment variables used by the app.
 
 ```
 // Firebase server to connect to when running and developing. You can get this
 // JSON from https://console.firebase.google.com/project/<project-name>/overview
-REACT_APP_FIREBASE_CONFIG={"apiKey":"","databaseURL":"","projectId":"", ... }
+REACT_APP_FIREBASE_CONFIG='{"apiKey":"","databaseURL":"","projectId":"", ... }'
 // If you create assets for cards, etc. you can reference them here.
-REACT_APP_ASSET_URL_PREFIX=http://www.foo.foo/
+REACT_APP_ASSET_URL_PREFIX='http://www.foo.foo/'
 ```
+
+Note: `.env` file values are not escaped for you, so wrap any values with
+whitespace in quotes and escape any special characters (for bash).
 
 ## Run and Test
 
@@ -50,9 +56,11 @@ npm run build
 rsync -av --chmod=D2775,F664 build/ <user>@<domain>:<absolute-path>/
 ```
 
-Note that `npm run build` uses your `.env` file to build, so *make sure that's
-correct* when building or you'll accidentally point production users to your
-development database and assets!
+Note: `npm run build` uses your `.env` file(s) to build, so make sure you
+understand how
+[dotenv environment variables](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#adding-development-environment-variables-in-env)
+work before building (or you might, say, point production at your development
+Firebase instance).
 
 ## Project Dependencies and Documentation
 

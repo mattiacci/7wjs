@@ -46,12 +46,8 @@ const Scoring = {
   LEADER: 7
 };
 
-var Action = {
-  BUILD: 0,
-  BUILD_WONDER: 1,
-  DISCARD: 2,
-  UNDO: 3
-};
+var Action = ['BUILD', 'BUILD_WONDER', 'DISCARD', 'UNDO'];
+Action.forEach((action, i) => { Action[action] = i; });
 
 const Card = function(name, age, cost, type, rewards, minPlayers, tooltip) {
   this.name = name;
@@ -384,7 +380,7 @@ const AGE3DECK = [
       return {type: Scoring.GUILD, points: Math.floor(player.gold / 3)};
     });
   }, 0, 'Yields 1 victory point for every 3 gold.'),
-  
+
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 3, 'Provides 3 units of military strength.'),
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 4, 'Provides 3 units of military strength.'),
   new Card('Arsenal', 3, [[Resource.WOOD, Resource.WOOD, Resource.ORE, Resource.CLOTH]], CardType.MILITARY, militaryReward(3), 7, 'Provides 3 units of military strength.'),

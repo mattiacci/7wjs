@@ -121,10 +121,10 @@ const fulfillWithSimpleResources = function(needed, player) {
     for (var j = 0; j < amount; j++) {
       var index = needed.indexOf(resource);
       if (index !== -1) {
-        console.log(resource, 'found');
+        // Found resource, so remove from needed.
         needed.splice(index, 1);
       } else {
-        console.log(resource, 'not needed');
+        // Resource not needed.
         break;
       }
     }
@@ -521,7 +521,7 @@ const Turn = function(player, game, hands, index, free) {
     window.setTimeout(game.resume.bind(game), 0);
   }
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
-    console.log(player, game, hands, index, action, card, payment);
+    console.log(this.playerState.playerInterface.name, Action[action], card.name, payment);
 
     if (action === Action.UNDO) {
       if (this.played) {
@@ -567,7 +567,7 @@ const Turn = function(player, game, hands, index, free) {
         });
       } else if (verify(player, card, payment)) {
         player.built.push(card);
-        
+
         // Update payment to bank
         if (payment.bank > 0) {
           for (let i = card.cost.length - 1; i > -1; i--) {
@@ -578,7 +578,7 @@ const Turn = function(player, game, hands, index, free) {
             }
           }
         }
-        
+
         const payNeighboursFn = payNeighbours(player, payment);
         game.endOfRoundPayments.push(payNeighboursFn);
         this.undoStack.push(function() {
@@ -646,6 +646,8 @@ const Turn = function(player, game, hands, index, free) {
         player.gold -= 3;
         game.discarded.splice(i, 1);
       });
+    } else if (action == null) {
+      console.log('ERROR: No action chosen');
     } else {
       console.log('ERROR: attempting to build wonder on playDiscarded or attempting to build a duplicate card or attempting to undo before playing');
       return false;
@@ -697,7 +699,7 @@ const LeadersDraftTurn = function(player, game, hands, index) {
         return false;
       }
     }
-    
+
     if (this.played) {
       console.log('ERROR: already played this turn. ignoring attempt');
       return false;
@@ -711,7 +713,7 @@ const LeadersDraftTurn = function(player, game, hands, index) {
     this.undoStack.push(function() {
       player.leaders.pop();
     });
-    
+
     for (let i = 0; i < hands[index].length; i++) {
       if (hands[index][i] === card) {
         hands[index].splice(i, 1);
@@ -780,11 +782,11 @@ const SevenWonders = function() {
       decks[0] = AGE1DECK.filter(function(card) {
         return card.minPlayers <= len;
       });
-      
+
       decks[1] = AGE2DECK.filter(function(card) {
         return card.minPlayers <= len;
       });
-      
+
       var guildsToRetain = 2 + len;
       var guilds = AGE3DECK.filter(function(card) {
         return card.minPlayers === 0;
@@ -802,7 +804,7 @@ const SevenWonders = function() {
       decks[2] = AGE3DECK.filter(function(card) {
         return card.minPlayers <= len && card.minPlayers > 0;
       }).concat(guilds);
-      
+
       // Leaders
       if (this.leaders) {
         var leadersCards = LEADERS.slice(0);
@@ -813,7 +815,7 @@ const SevenWonders = function() {
         }
         decks[3] = leadersCards;
       }
-      
+
       // Deal
       this.hands = [];
       for (let i = 0; i < 3; i++) {
@@ -942,11 +944,9 @@ const SevenWonders = function() {
   };
 
   this.playRound = function() {
-    console.log('playRound');
-    console.log(this.hands, this.age, this.numPlayers);
+    console.log('playRound: ', this.hands[this.age].map(hand => hand.map(card => card.name)));
     this.updateCurrentScores();
     for (let i = 0; i < this.numPlayers; i++) {
-      console.log(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
       this.playerInterfaces[i].update(Array.prototype.slice.call(this.hands[this.age][i]), new Turn(this.players[i], this, this.hands[this.age], i));
     }
     this.cachePublicGameState();
@@ -967,7 +967,7 @@ const SevenWonders = function() {
       this.playerInterfaces[i].play();
     }
   };
-  
+
   this.playLeadersDraftRound = function() {
     console.log('playerLeaderPhase');
     console.log(this.hands, this.numPlayers);
@@ -1151,7 +1151,7 @@ const SevenWonders = function() {
       }
     }
   };
-  
+
   this.checkEndLeadersDraftRound = function() {
     var len = this.numPlayers;
     // If all players have played, execute rewards
@@ -1169,7 +1169,7 @@ const SevenWonders = function() {
       }
     }
   };
-  
+
   if (arguments.length > 1) {
     this.init.apply(this, arguments);
   }
@@ -1203,7 +1203,7 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
   }(playerInterface), 2000);
 
   this.process = function() {
-    console.log(this.name, 'processing', this.currTurn, this.pendingTurns);
+    console.log(this.name, 'process');
     var turn;
     var isUndo = false;
     if (this.pendingTurns.length > 0) {
@@ -1211,13 +1211,13 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
       isUndo = turn.action === Action.UNDO;
     }
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
-      console.log(this.name, 'processing now', turn);
+      console.log(this.name, 'processing now\n', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
-      console.log(this.name, 'executing turn', turn.action, getCard(turn.card), turn.payment);
+      console.log(this.name, 'executing turn', Action[turn.action], getCard(turn.card).name, turn.payment);
       // If this is the last payer executing play on the turn, the game will proceed to the next round.
       var currTurn = this.currTurn;
       var success = currTurn.play(turn.action, getCard(turn.card), turn.payment);
-      console.log(this.name, 'checking if successful', success, this.currTurn, currTurn, this.currTurn === currTurn);
+      console.log(this.name, 'checking if successful', success, this.currTurn === currTurn);
       if (success && this.currTurn === currTurn) {
         console.log(this.name, 'turn successful');
         if (isUndo) {

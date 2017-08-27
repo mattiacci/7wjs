@@ -521,7 +521,7 @@ const Turn = function(player, game, hands, index, free) {
     window.setTimeout(game.resume.bind(game), 0);
   }
   this.play = function(action, card, payment /* resources to purchase Payment object */) {
-    console.log(this.playerState.playerInterface.name, Action[action], card.name, payment);
+    console.log(this.playerState.playerInterface.name, Action[action], (card || {}).name, payment);
 
     if (action === Action.UNDO) {
       if (this.played) {
@@ -1213,7 +1213,7 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
     if ((!this.currTurnEnded || isUndo) && this.pendingTurns.length > 0) {
       console.log(this.name, 'processing now\n', turn);
       this.pendingTurns = this.pendingTurns.slice(1);
-      console.log(this.name, 'executing turn', Action[turn.action], getCard(turn.card).name, turn.payment);
+      console.log(this.name, 'executing turn', Action[turn.action], (getCard(turn.card) || {}).name, turn.payment)
       // If this is the last payer executing play on the turn, the game will proceed to the next round.
       var currTurn = this.currTurn;
       var success = currTurn.play(turn.action, getCard(turn.card), turn.payment);
@@ -1252,15 +1252,16 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
       return;
     }
 
-    console.log(this.name, 'draw start');
+    console.log(this.name, 'draw');
 
     const data = this.currTurn.game.getKnownGameStateForPlayer(
         this.currTurn.playerState);
     const actions = this.getActions();
 
-    this.requestDraw(data, actions);
-
-    console.log(this.name, 'draw done');
+    Promise.resolve().then(() => {
+      this.requestDraw(data, actions);
+    });
+    console.log(this.name, 'was given updated state');
   };
 
   /**
@@ -1270,10 +1271,10 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
   this.getActions = function() {
     if (this.currTurnEnded && this.allowUndo) {
       return {
-        undo: (function() {
+        undo: () => {
           turnsRef.push({id: this.id, action: Action.UNDO});
-        }).bind(this)
-      };
+        }
+      }
     } else if (!this.currTurnEnded) {
       const act = (function(data, action) {
         data = JSON.parse(JSON.stringify(data));
@@ -1285,13 +1286,13 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
       }).bind(this);
       return {
         build: function(data) {
-          act(data, 0);
+          act(data, Action.BUILD);
         },
         buildWonder: function(data) {
-          act(data, 1);
+          act(data, Action.BUILD_WONDER);
         },
         discard: function(data) {
-          act(data, 2);
+          act(data, Action.DISCARD);
         }
       };
     } else {
@@ -1330,7 +1331,7 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
   };
 
   this.play = function() {
-    console.log(this.name, 'drawing');
+    console.log(this.name, 'playing');
     this.draw();
     this.process();
   };

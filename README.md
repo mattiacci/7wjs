@@ -54,7 +54,7 @@ npm test        // Runs tests, of course.
 
 ```
 npm run build
-rsync -av --chmod=u=rwX,go=rX build/ <user>@<domain>:<absolute-path>/
+rsync -av --chmod=D2775,F664 build/ <user>@<domain>:<absolute-path>/
 ```
 
 Note: `npm run build` uses your `.env` file(s) to build, so make sure you

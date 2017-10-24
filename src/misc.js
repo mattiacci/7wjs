@@ -73,8 +73,9 @@ const makeLeader = function(name, cost, rewards, tooltip) {
   return new Card(name, 0, [cost], CardType.LEADER, rewards, 0, tooltip);
 }
 
-const scienceScore = function(player, scores) {
-  return scores[0] * scores[0] + scores[1] * scores[1] + scores[2] * scores[2] + player.scienceSetBonus * Math.min.apply(null, scores);
+const scienceScore = function(scienceSetBonus, scores) {
+  return scores[0] * scores[0] + scores[1] * scores[1] + scores[2] * scores[2] +
+      scienceSetBonus * Math.min.apply(null, scores);
 }
 const calcScienceScore = function(player) {
   var academics = player.sciences[Science.ACADEMICS];
@@ -82,39 +83,39 @@ const calcScienceScore = function(player) {
   var literature = player.sciences[Science.LITERATURE];
   var scores = [academics, engineering, literature].sort();
   if (player.bonusSciences === 0) {
-    return scienceScore(player, scores);
+    return scienceScore(player.scienceSetBonus, scores);
   } else if (player.bonusSciences === 1) {
     // Add both to highest
     let longChain = scores.slice(0);
     longChain[2]++;
-    let longChainScore = scienceScore(player, longChain);
+    let longChainScore = scienceScore(player.scienceSetBonus, longChain);
     // Add both to lowest
     let manySets = scores.slice(0);
     manySets[0]++;
-    let manySetsScore = scienceScore(player, manySets);
+    let manySetsScore = scienceScore(player.scienceSetBonus, manySets);
     return Math.max(longChainScore, manySetsScore);
   } else if (player.bonusSciences === 2) {
     // Add both to highest
     let longChain = scores.slice(0);
     longChain[2] += 2;
-    let longChainScore = scienceScore(player, longChain);
+    let longChainScore = scienceScore(player.scienceSetBonus, longChain);
 
     // Add one to highest and one to lowest
     let splitStrat = scores.slice(0);
     splitStrat[0]++;
     splitStrat[2]++;
-    let splitStratScore = scienceScore(player, splitStrat);
+    let splitStratScore = scienceScore(player.scienceSetBonus, splitStrat);
 
     // Add one to middle and one to lowest
     let fillSet = scores.slice(0);
     fillSet[0]++;
     fillSet[1]++;
-    let fillSetScore = scienceScore(player, fillSet);
+    let fillSetScore = scienceScore(player.scienceSetBonus, fillSet);
 
     // Add both to lowest
     var manySets = scores.slice(0);
     manySets[0] += 2;
-    var manySetsScore = scienceScore(player, manySets);
+    var manySetsScore = scienceScore(player.scienceSetBonus, manySets);
 
     return Math.max(longChainScore, splitStratScore, fillSetScore, manySetsScore);
   }

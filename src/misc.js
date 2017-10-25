@@ -73,8 +73,9 @@ const makeLeader = function(name, cost, rewards, tooltip) {
   return new Card(name, 0, [cost], CardType.LEADER, rewards, 0, tooltip);
 }
 
-const scienceScore = function(scores) {
-  return scores[0] * scores[0] + scores[1] * scores[1] + scores[2] * scores[2] + 7 * Math.min.apply(null, scores);
+const scienceScore = function(scienceSetBonus, scores) {
+  return scores[0] * scores[0] + scores[1] * scores[1] + scores[2] * scores[2] +
+      scienceSetBonus * Math.min.apply(null, scores);
 }
 const calcScienceScore = function(player) {
   var academics = player.sciences[Science.ACADEMICS];
@@ -82,39 +83,39 @@ const calcScienceScore = function(player) {
   var literature = player.sciences[Science.LITERATURE];
   var scores = [academics, engineering, literature].sort();
   if (player.bonusSciences === 0) {
-    return scienceScore(scores);
+    return scienceScore(player.scienceSetBonus, scores);
   } else if (player.bonusSciences === 1) {
     // Add both to highest
     let longChain = scores.slice(0);
     longChain[2]++;
-    let longChainScore = scienceScore(longChain);
+    let longChainScore = scienceScore(player.scienceSetBonus, longChain);
     // Add both to lowest
     let manySets = scores.slice(0);
     manySets[0]++;
-    let manySetsScore = scienceScore(manySets);
+    let manySetsScore = scienceScore(player.scienceSetBonus, manySets);
     return Math.max(longChainScore, manySetsScore);
   } else if (player.bonusSciences === 2) {
     // Add both to highest
     let longChain = scores.slice(0);
     longChain[2] += 2;
-    let longChainScore = scienceScore(longChain);
+    let longChainScore = scienceScore(player.scienceSetBonus, longChain);
 
     // Add one to highest and one to lowest
     let splitStrat = scores.slice(0);
     splitStrat[0]++;
     splitStrat[2]++;
-    let splitStratScore = scienceScore(splitStrat);
+    let splitStratScore = scienceScore(player.scienceSetBonus, splitStrat);
 
     // Add one to middle and one to lowest
     let fillSet = scores.slice(0);
     fillSet[0]++;
     fillSet[1]++;
-    let fillSetScore = scienceScore(fillSet);
+    let fillSetScore = scienceScore(player.scienceSetBonus, fillSet);
 
     // Add both to lowest
     var manySets = scores.slice(0);
     manySets[0] += 2;
-    var manySetsScore = scienceScore(manySets);
+    var manySetsScore = scienceScore(player.scienceSetBonus, manySets);
 
     return Math.max(longChainScore, splitStratScore, fillSetScore, manySetsScore);
   }
@@ -467,6 +468,7 @@ const PlayerState = function(board, side, playerInterface, isLeadersGame) {
 
   this.board = board;
   this.bonusSciences = 0;
+  this.scienceSetBonus = 7;
   this.side = side;
   this.stagesBuilt = [];
   this.playerInterface = playerInterface;
@@ -516,6 +518,7 @@ const clonePlayers = function(players) {
     clone.resources[Resource.PAPER] = player.resources[Resource.PAPER];
 
     clone.bonusSciences = player.bonusSciences;
+    clone.scienceSetBonus = player.scienceSetBonus;
     clone.stagesBuilt = Array.prototype.slice.call(player.stagesBuilt);
     clone.gold = player.gold;
     clone.military = player.military;
@@ -668,9 +671,7 @@ const LEADERS = [
   makeLeader('Amytis', 4, complexReward(Scoring.LEADER, [CardType.WONDER], true, false, 0, 2), 'Yields 2 victory points for every wonder stage built.'),
   // Archimedes. Green cards cost one less resource.
   makeLeader('Aristotle', 3, (player) => {
-    player.endGameRewards.push((player) => {
-      return {type: Scoring.LEADER, points: 3 * Math.min(player.sciences[Science.ACADEMICS], player.sciences[Science.ENGINEERING], player.sciences[Science.LITERATURE])};
-    });
+    player.scienceSetBonus += 3;
   }, 'Yields 3 victory points for every completed set of Sciences.'),
   // Bilkis. Once per turn, resources may be purchased from the bank for 1 gold.
   makeLeader('Caesar', 5, militaryReward(2), 'Provides 2 units of military strength.'),

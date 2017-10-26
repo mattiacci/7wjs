@@ -366,6 +366,17 @@ const verify = function(player, card, payment) {
     return ok;
   }
 
+  // Must not pay if can build for free due to Maecenas or Ramses
+  if (player.freeBuildTypes.indexOf(card.type) != -1) {
+    const ok = payment.east.length === 0 && payment.west.length === 0 &&
+        payment.bank === 0;
+    if (!ok) {
+      console.log(
+        'ERROR: attempting to pay for a free building (Maecenas or Ramses)');
+    }
+    return ok;
+  }
+
   for (let i = card.cost.length - 1; i > -1; i--) {
     const cost = card.cost[i];
     switch (typeof cost) {
@@ -506,7 +517,8 @@ const payNeighbours = function(player, payment) {
   };
 };
 
-const Turn = function(player, game, hands, index, free) {
+const Turn = function(player, game, hands, index,
+    free /* for discarded round only */) {
   this.playerState = player;
   this.game = game;
   this.free = free;
@@ -584,6 +596,11 @@ const Turn = function(player, game, hands, index, free) {
         this.undoStack.push(function() {
           const i = game.endOfRoundPayments.indexOf(payNeighboursFn);
           game.endOfRoundPayments.splice(i, 1);
+          player.built.pop();
+        });
+      } else if (player.freeBuildTypes.indexOf(card.type) != -1) {
+        player.built.push(card);
+        this.undoStack.push(function() {
           player.built.pop();
         });
       } else if (player.canBuildForFree[game.age] && payment.east.length === 0 && payment.west.length === 0 && payment.bank === 0) {
@@ -1110,7 +1127,9 @@ const SevenWonders = function() {
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].draw();
             }
-            this.playerInterfaces[i].update(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
+            this.playerInterfaces[i].update(this.discarded.filter((card) => {
+              return card.type != CardType.LEADER;
+            }), new Turn(this.players[i], this, [this.discarded], 0, true));
             this.playerInterfaces[i].play();
             return;
           }

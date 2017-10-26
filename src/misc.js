@@ -482,6 +482,7 @@ const PlayerState = function(board, side, playerInterface, isLeadersGame) {
   this.canDoubleBuild = false;
   this.playDiscardedNow = false;
   this.canBuildForFree = [false, false, false];
+  this.freeBuildTypes = [];
   this.victoryPoints = [];
   this.victoryPoints[Scoring.MILITARY] = 0;
   this.victoryPoints[Scoring.GOLD] = 0;
@@ -532,6 +533,7 @@ const clonePlayers = function(players) {
     clone.canDoubleBuild = player.canDoubleBuild; // Babylon B
     clone.playDiscardedNow = player.playDiscardedNow; // Halikarnassos
     clone.canBuildForFree = Array.prototype.slice.call(player.canBuildForFree); // Olympia A
+    clone.freeBuildTypes = Array.prototype.slice.call(player.freeBuildTypes);
     clone.victoryPoints = Array.prototype.slice.call(player.victoryPoints);
     clone.currentScore = Array.prototype.slice.call(player.currentScore);
     clone.scoreTotal = player.scoreTotal;
@@ -700,7 +702,9 @@ const LEADERS = [
       return {type: Scoring.LEADER, points: 7 - player.battleTokens.filter((t) => t !== -1).length};
     });
   }, 'Yields 7 victory points less 1 point for every victory token.'),
-  // Maecenas. White cards are free.
+  makeLeader('Maecenas', 1, (player) => {
+    player.freeBuildTypes.push(CardType.LEADER);
+  }, 'White cards are free.'),
   makeLeader('Midas', 3, (player) => {
     player.endGameRewards.push((player) => {
       return {type: Scoring.LEADER, points: Math.floor(player.gold / 3)};
@@ -727,7 +731,9 @@ const LEADERS = [
   makeLeader('Praxiteles', 3, complexReward(Scoring.LEADER, [CardType.GOODS], true, false, 0, 2), 'Yields 2 victory points for every grey card.'),
   makeLeader('Ptolemy', 5, scienceReward(Science.LITERATURE), 'Enchances literature.'),
   makeLeader('Pythagoras', 5, scienceReward(Science.ENGINEERING), 'Enchances engineering.'),
-  // Ramses. Purple cards are free.
+  makeLeader('Ramses', 5, (player) => {
+    player.freeBuildTypes.push(CardType.GUILD);
+  }, 'Purple cards are free.'),
   makeLeader('Sappho', 1, pointsReward(2, Scoring.LEADER), 'Yields 2 victory points.'),
   // Semiramis. Wat.
   makeLeader('Solomon', 3, discardedReward(), 'Play a card from the discard pile for free.'),

@@ -481,6 +481,7 @@ const PlayerState = function(board, side, playerInterface, isLeadersGame) {
   this.endGameRewards = [];
   this.canDoubleBuild = false;
   this.playDiscardedNow = false;
+  this.discounts = [];
   this.canBuildForFree = [false, false, false];
   this.victoryPoints = [];
   this.victoryPoints[Scoring.MILITARY] = 0;
@@ -531,6 +532,7 @@ const clonePlayers = function(players) {
     clone.endGameRewards = []; // not cloned
     clone.canDoubleBuild = player.canDoubleBuild; // Babylon B
     clone.playDiscardedNow = player.playDiscardedNow; // Halikarnassos
+    clone.discounts = Array.prototype.slice.call(player.discounts);
     clone.canBuildForFree = Array.prototype.slice.call(player.canBuildForFree); // Olympia A
     clone.victoryPoints = Array.prototype.slice.call(player.victoryPoints);
     clone.currentScore = Array.prototype.slice.call(player.currentScore);
@@ -662,6 +664,13 @@ const WONDERS = [
   ),
 ];
 
+const typeDiscountReward = function() {
+  var args = Array.prototype.slice.call(arguments);
+  return function(player) {
+    player.discounts = player.discounts.concat(args);
+  };
+};
+
 const LEADERS = [
   makeLeader('Alexander', 3, (player) => {
     player.endGameRewards.push((player) => {
@@ -669,7 +678,10 @@ const LEADERS = [
     });
   }, 'Yields 1 victory point for every victory token.'),
   makeLeader('Amytis', 4, complexReward(Scoring.LEADER, [CardType.WONDER], true, false, 0, 2), 'Yields 2 victory points for every wonder stage built.'),
-  // Archimedes. Green cards cost one less resource.
+  makeLeader('Archimedes', 4,
+      typeDiscountReward(
+          CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE),
+      'Green cards cost one less resource.'),
   makeLeader('Aristotle', 3, (player) => {
     player.scienceSetBonus += 3;
   }, 'Yields 3 victory points for every completed set of Sciences.'),
@@ -679,12 +691,15 @@ const LEADERS = [
   makeLeader('Croesus', 1, goldReward(6), 'Produces 6 gold.'),
   // Diocletian. Wat.
   makeLeader('Euclid', 5, scienceReward(Science.ACADEMICS), 'Enchances academics.'),
-  // Hammurabi. Blue cards cost one less resource.
+  makeLeader('Hammurabi', 2, typeDiscountReward(CardType.VICTORY),
+      'Blue cards cost one less resource.'),
   makeLeader('Hannibal', 2, militaryReward(1), 'Provides 1 unit of military strength.'),
   // Hatshepsut. Whenever you pay a neighbor, gain 1 gold.
   makeLeader('Hiram', 3, complexReward(Scoring.LEADER, [CardType.GUILD], true, false, 0, 2), 'Yields 2 victory points for every purple card.'),
   makeLeader('Hypatia', 4, complexReward(Scoring.LEADER, [CardType.ACADEMICS, CardType.ENGINEERING, CardType.LITERATURE], true, false, 0, 1), 'Yields 1 victory point for every green card.'),
   // Imhotep. Wonder stages cost one less resource.
+  makeLeader('Imhotep', 3, typeDiscountReward(CardType.WONDER),
+      'Wonder stages cost one less resource.'),
   makeLeader('Justinian', 3, (player) => {
     player.endGameRewards.push((player) => {
       return {type: Scoring.LEADER, points: 3 * Math.min(
@@ -694,7 +709,8 @@ const LEADERS = [
       )};
     });
   }, 'Yields 3 victory points for every set of Red, Blue and Green cards.'),
-  // Leonidas. Red cards cost one less resource.
+  makeLeader('Leonidas', 2, typeDiscountReward(CardType.MILITARY),
+      'Red cards cost one less resource.'),
   makeLeader('Louis', 4, (player) => {
     player.endGameRewards.push((player) => {
       return {type: Scoring.LEADER, points: 7 - player.battleTokens.filter((t) => t !== -1).length};

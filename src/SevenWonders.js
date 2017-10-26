@@ -1127,7 +1127,9 @@ const SevenWonders = function() {
               this.playerInterfaces[j].allowUndo = false;
               this.playerInterfaces[j].draw();
             }
-            this.playerInterfaces[i].update(Array.prototype.slice.call(this.discarded), new Turn(this.players[i], this, [this.discarded], 0, true));
+            this.playerInterfaces[i].update(this.discarded.filter((card) => {
+              return card.type != CardType.LEADER;
+            }), new Turn(this.players[i], this, [this.discarded], 0, true));
             this.playerInterfaces[i].play();
             return;
           }

@@ -426,11 +426,19 @@ const verify = function(player, card, payment) {
           }
         }
 
-        console.log(needed.slice(0), 'needs to be fulfilled by generators');
-        // check for multi resources
+        console.log(needed.slice(0),
+            'needs to be fulfilled by generators and discounts');
+        // check for multi resources and discounts
         const resourcesToPurchase = payment.east.concat(payment.west);
-        if (!canPay(player.multiResources.slice(0), needed.slice(0), resourcesToPurchase.slice(0))) {
-          console.log('ERROR: unable to pay for what is needed using multi resource generators');
+        const multiResources = player.multiResources.slice(0);
+        if (player.discounts.indexOf(card.type) != -1) {
+          multiResources.push([Resource.CLAY, Resource.STONE, Resource.WOOD,
+              Resource.ORE, Resource.GLASS, Resource.CLOTH, Resource.PAPER]);
+        }
+        if (!canPay(
+            multiResources, needed.slice(0), resourcesToPurchase.slice(0))) {
+          console.log('ERROR: unable to pay for what is needed using multi ' +
+              'resource generators and discounts');
           return false;
         }
 

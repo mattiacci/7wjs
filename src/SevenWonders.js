@@ -598,11 +598,6 @@ const Turn = function(player, game, hands, index,
           game.endOfRoundPayments.splice(i, 1);
           player.built.pop();
         });
-      } else if (player.freeBuildTypes.indexOf(card.type) != -1) {
-        player.built.push(card);
-        this.undoStack.push(function() {
-          player.built.pop();
-        });
       } else if (player.canBuildForFree[game.age] && payment.east.length === 0 && payment.west.length === 0 && payment.bank === 0) {
         player.built.push(card);
         player.canBuildForFree[game.age] = false;

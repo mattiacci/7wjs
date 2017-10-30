@@ -31,7 +31,7 @@ const Card = function(props) {
             );
           } else if (typeof cost === 'number') {
             return (
-              <div key={i}>1 gold</div>
+              <div key={i}>{cost} gold</div>
             );
           } else {
             window.console.error('Invalid card cost type');

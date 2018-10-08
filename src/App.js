@@ -60,7 +60,7 @@ const LoginForm = withRouter(class extends Component {
     const { from } = this.props.location.state ||
         { from: { pathname: process.env.PUBLIC_URL + '/' } };
     const { redirectToReferrer, name } = this.state;
-    
+
     if (redirectToReferrer) {
       return (
         <Redirect to={from}/>
@@ -72,17 +72,17 @@ const LoginForm = withRouter(class extends Component {
         <Redirect to={{pathname: process.env.PUBLIC_URL + '/'}}/>
       );
     }
-    
+
     var buttonAttrs = {};
     if (!this.state.name.trim()) {
       buttonAttrs.disabled = 'disabled';
     }
     return (
-      <div>
+      <form className="LoginForm">
         <p>Please provide a name before playing:</p>
         <input value={name} onChange={this.updateName}/>
         <button onClick={this.login} {...buttonAttrs}>Log in</button>
-      </div>
+      </form>
     );
   }
 });

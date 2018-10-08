@@ -38,6 +38,32 @@ test('starts game and passes state and actions only to local player', (done) => 
   expect(stateUpdateHandler).toHaveBeenCalledTimes(0);
 });
 
+test('starts game and shows public state with no actions to spectator', (done) => {
+  const verifyGameState = () => {
+    expect(stateUpdateHandler).toHaveBeenCalledTimes(1);
+    expect(stateUpdateHandler.mock.calls[0][0]).toMatchSnapshot('initial-spectator');
+    expect(stateUpdateHandler.mock.calls[0][1]).toEqual({});
+    expect(remoteStateUpdateHandler).not.toHaveBeenCalled();
+    expect(endGameHandler).not.toHaveBeenCalled();
+    done();
+  };
+  const interfaces = [];
+  const stateUpdateHandler = jest.fn(verifyGameState);
+  const remoteStateUpdateHandler = jest.fn();
+  const turnsRef = [];
+  interfaces.push(new SevenWonders.PlayerInterface(
+      stateUpdateHandler, turnsRef, 0, PLAYERS[0], false));
+  for (let i = 1; i < WONDERS.length; i++) {
+    interfaces.push(new SevenWonders.PlayerInterface(
+        remoteStateUpdateHandler, turnsRef, i, PLAYERS[i], false));
+  }
+  const endGameHandler = jest.fn();
+  const game = new SevenWonders(interfaces, WONDERS, HANDS, false, endGameHandler, false);
+  expect(turnsRef).toHaveLength(0);
+  // stateUpdateHandler will get called asynchronously.
+  expect(stateUpdateHandler).toHaveBeenCalledTimes(0);
+});
+
 test('accepts an entire game of valid actions', (done) => {
   let i = 0;
   const verifyGameState = function(state, actions) {

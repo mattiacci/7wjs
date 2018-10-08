@@ -892,6 +892,11 @@ const SevenWonders = function() {
       state.players[i].waiting = this.playerInterfaces[i].currTurnEnded;
     }
 
+    // If no player is requested, get a spectator's (public) state.
+    if (!playerState) {
+      return state;
+    }
+
     // Rearrange players so given player comes first.
     const rearrangedPlayers = [];
     for (let i = playerState.playerInterface.id; i < state.players.length; i++) {
@@ -1270,20 +1275,22 @@ const PlayerInterface = function(requestDraw, turnsRef, id, name, isLocal) {
   };
 
   this.draw = function() {
-    if (!this.isLocal) {
-      return;
+    const spectating = this.currTurn.game.playerInterfaces.every(player => !player.isLocal);
+    if (spectating && this.id === 0) {
+      console.log('draw for spectator');
+      const data = this.currTurn.game.getKnownGameStateForPlayer();
+      Promise.resolve().then(() => {
+        this.requestDraw(data, {});
+      });
+    } else if (!spectating && this.isLocal) {
+      console.log(this.name, 'draw');
+      const data = this.currTurn.game.getKnownGameStateForPlayer(
+          this.currTurn.playerState);
+      const actions = this.getActions();
+      Promise.resolve().then(() => {
+        this.requestDraw(data, actions);
+      });
     }
-
-    console.log(this.name, 'draw');
-
-    const data = this.currTurn.game.getKnownGameStateForPlayer(
-        this.currTurn.playerState);
-    const actions = this.getActions();
-
-    Promise.resolve().then(() => {
-      this.requestDraw(data, actions);
-    });
-    console.log(this.name, 'was given updated state');
   };
 
   /**

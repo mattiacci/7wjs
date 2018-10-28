@@ -12,14 +12,24 @@
   },
   "devDependencies": {
     "husky": "^1.1.2",
-    "react-scripts": "1.1.5"
+    "react-scripts": "2.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "precommit": "CI=true npm test",
-    "prepush": "CI=true npm test"
-  }
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "CI=true npm test",
+      "pre-push": "CI=true npm test"
+    }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`initial 1`] = `
+exports[`starts game and passes state and actions only to local player: initial 1`] = `
 Object {
   "game": Object {
     "age": 0,
@@ -253,7 +253,7 @@ Object {
 }
 `;
 
-exports[`initial-spectator 1`] = `
+exports[`starts game and shows public state with no actions to spectator: initial-spectator 1`] = `
 Object {
   "game": Object {
     "age": 0,

@@ -2,14 +2,12 @@
 
 ## First Time Setup
 
-### Install NodeJS 6.x
+### Install NodeJS 8+
 
-On Debian or Ubuntu-based Linux distros, including
-[Ubuntu on Windows 10 via WSL](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide#for-anniversary-update-and-creators-update-install-using-lxrun),
-you can do this by running:
+On Debian or Ubuntu-based Linux distros, including Ubuntu on Windows 10 via
+WSL, you can do this by running:
 ```
-curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-sudo apt-get install -y build-essential nodejs
+sudo apt-get install -y build-essential nodejs npm
 ```
 
 You can find
@@ -46,8 +44,8 @@ whitespace in quotes and escape any special characters (for bash).
 From the project's top-level directory, you can run the following commands:
 
 ```
-npm start       // Starts a dev server at http://localhost:3000. Ctrl+C to stop.
-npm test        // Runs tests, of course.
+npm start      // Starts a dev server at http://localhost:3000. Ctrl+C to stop.
+npm test       // Runs tests, of course.
 ```
 
 ## Build and Deploy
@@ -59,13 +57,13 @@ rsync -av --chmod=D2775,F664 build/ <user>@<domain>:<absolute-path>/
 
 Note: `npm run build` uses your `.env` file(s) to build, so make sure you
 understand how
-[dotenv environment variables](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#adding-development-environment-variables-in-env)
+[dotenv environment variables](https://facebook.github.io/create-react-app/docs/adding-custom-environment-variables)
 work before building (or you might, say, point production at your development
 Firebase instance).
 
 ## Project Dependencies and Documentation
 
-This project was bootstrapped with
-[Create React App](https://github.com/facebookincubator/create-react-app).
-Many of your questions can be answered by looking at the
-[Create React App guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
+This project was bootstrapped with Create React App.
+Many of your questions can be answered by looking at the Create React App
+[docs](https://facebook.github.io/create-react-app/docs/getting-started) or
+[readme](https://github.com/facebook/create-react-app/blob/master/README.md).

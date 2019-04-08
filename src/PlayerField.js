@@ -22,7 +22,7 @@ const PlayerField = function(props) {
     });
   });
   */
-  var cardTypes = builtCards.map(function(cardList, i) {
+  var fieldOfBuiltCards = builtCards.map(function(cardList, i) {
     if (!cardList.length) {
       return null;
     }
@@ -53,7 +53,7 @@ const PlayerField = function(props) {
       <div style={{marginTop: 20}}>Gold: {props.gold}</div>
       <div>Battle Tokens: {props.battleTokens.join(' ')}</div>
       <div>Built:</div>
-      <div>{cardTypes}</div>
+      <div>{fieldOfBuiltCards}</div>
       <WonderBoard isLast={props.wonder.isLast} built={props.wonder.built} name={props.wonder.name} side={props.wonder.side} stageCount={props.wonder.stageCount} />
     </div>
   );

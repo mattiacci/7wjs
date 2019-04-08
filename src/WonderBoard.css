@@ -1,4 +1,9 @@
-.board {
+.WonderBoard {
+  margin-bottom: 20px;
+  padding: 0 14px 60px;
+  position: relative;
+}
+.WonderBoard .board {
   background-size: contain;
   background-position: top;
   background-repeat: no-repeat;
@@ -6,18 +11,7 @@
   height: 173px;
   position: relative;
 }
-.back-container {
+.WonderBoard .builtCard {
   position: absolute;
-  left: 0;
   bottom: 0;
-  width: 102px;
-  transition: .2s all;
-}
-.back-container:hover {
-  transform: rotateY(180deg);
-  z-index: 1;
-}
-.wonder {
-  padding: 0 11px 57px;
-  position: relative;
 }

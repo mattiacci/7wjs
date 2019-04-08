@@ -1,6 +1,8 @@
 .GameUI {
   display: flex;
   flex-direction: row-reverse;
+  overflow: scroll;
   overflow-x: scroll;
+  overflow-y: hidden;
   white-space: nowrap;
 }

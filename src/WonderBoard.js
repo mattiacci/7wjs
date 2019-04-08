@@ -1,4 +1,5 @@
 import React from 'react';
+import Card from './Card.js';
 import './WonderBoard.css';
 import './card.css';
 
@@ -18,31 +19,16 @@ const WonderBoard = function(props) {
     console.error('WonderBoard: Unknown board');
     return <div />;
   }
-  var cardBacks = props.built.map(function(cardOrAge, i) {
-    var path = process.env.REACT_APP_ASSET_URL_PREFIX + 'Assets/Age ';
-    if (cardOrAge.age) {
-      return (
-        <div key={i} className="back-container" style={{left: start + delta * i}}>
-          <div className="back" style={{
-            backgroundImage: 'url("' + path + cardOrAge.age + '/Back.jpg")'
-          }} />
-          <div className="back hoverable" style={{
-            backgroundImage: 'url("' + path + cardOrAge.age + '/' + cardOrAge.minPlayers + ' ' + cardOrAge.name + '.jpg")'
-          }} />
-        </div>
-      );
-    } else {
-      return (
-        <div key={i} className="back" style={{
-          backgroundImage: 'url("' + path + cardOrAge + '/Back.jpg")',
-          left: start + delta * i
-        }} />
-      );
-    }
+  var builtStageCards = props.built.map(function(card, i) {
+    return (
+      <div key={i} className="builtCard" style={{ left: start + delta * i }}>
+        <Card data={card} faceDown={true} />
+      </div>
+    );
   });
   return (
-    <div className="WonderBoard wonder">
-      {cardBacks}
+    <div className="WonderBoard">
+      {builtStageCards}
       <div className="board" style={{
         backgroundImage: 'url("' + process.env.REACT_APP_ASSET_URL_PREFIX + 'Assets/' + props.name + ' ' + props.side + '.jpg")'
       }} />

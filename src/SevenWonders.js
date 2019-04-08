@@ -922,6 +922,10 @@ const SevenWonders = function() {
     });
     state.players[0].cardsInHand = hand;
 
+    // Include buried cards' info to player's built wonder stages.
+    const stagesBuilt = JSON.parse(JSON.stringify(playerState.stagesBuilt));
+    state.players[0].wonder.built = stagesBuilt;
+
     return state;
   };
 
@@ -952,7 +956,13 @@ const SevenWonders = function() {
         wonder: {
           isLast: playerState.built.length > 0 &&
               playerState.built[playerState.built.length - 1].type === CardType.WONDER,
-          built: playerState.stagesBuilt.map(function(card) { return card.age; }),
+          built: playerState.stagesBuilt.map(card => {
+            return {
+              age: card.age,
+              cost: [],
+              name: "Unknown Age " + card.age
+            };
+          }),
           name: playerState.board.name,
           side: playerState.side,
           stageCount: playerState.board.stages.length

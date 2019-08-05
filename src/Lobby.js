@@ -2,15 +2,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as firebase from 'firebase';
 import { Link, withRouter } from 'react-router-dom';
-import { AGE1DECK, AGE2DECK, AGE3DECK, WONDERS, LEADERS } from './misc.js';
+import { AGE1DECK, AGE2DECK, AGE3DECK, GameVariant, LEADERS, WONDERS } from './misc.js';
 import './Lobby.css';
 
 const GAME_NAME_MAX_LENGTH = 24;
 const PLAYERS_MIN = 2;
 const PLAYERS_MAX = 7;
 
-function shuffleWonders(players) {
-  const side = Math.random() < 0.5 ? 'A' : 'B';
+function shuffleWonders(players, side) {
   const boards = Array.prototype.slice.call(WONDERS);
   const output = [];
   for (var i = 0; i < players; i++) {
@@ -22,7 +21,7 @@ function shuffleWonders(players) {
   return output;
 }
 
-function shuffleCards(players, isLeadersGame) {
+function shuffleCards(players, variant) {
   const decks = [];
   decks[0] = AGE1DECK.filter(function(card) {
     return card.minPlayers <= players;
@@ -35,7 +34,7 @@ function shuffleCards(players, isLeadersGame) {
     return card.minPlayers === 0;
   });
   // Leaders only guilds
-  if (!isLeadersGame) {
+  if (variant !== GameVariant.LEADERS) {
     guilds = guilds.filter((card) => {
       return card.name !== 'Courtesans Guild' && card.name !== 'Diplomats Guild';
     });
@@ -48,7 +47,7 @@ function shuffleCards(players, isLeadersGame) {
     return card.minPlayers <= players && card.minPlayers > 0;
   }).concat(guilds);
   // Leaders
-  if (isLeadersGame) {
+  if (variant === GameVariant.LEADERS) {
     var leadersCards = LEADERS.slice(0);
     // TODO: Consider Roma B where player may draw more leader cards.
     var leadersToRetain = 4 * players;
@@ -57,7 +56,7 @@ function shuffleCards(players, isLeadersGame) {
     }
     decks[3] = leadersCards;
   }
-      
+
   // Deal
   const hands = [];
   for (let i = 0; i < 3; i++) {
@@ -73,7 +72,7 @@ function shuffleCards(players, isLeadersGame) {
   }
 
   // Leaders
-  if (isLeadersGame) {
+  if (variant === GameVariant.LEADERS) {
     hands[3] = [];
     for (let j = 0; j < players; j++) {
       const hand = [];
@@ -84,7 +83,7 @@ function shuffleCards(players, isLeadersGame) {
       hands[3].push(hand);
     }
   }
-  
+
   return hands;
 }
 
@@ -117,11 +116,20 @@ const Lobby = withRouter(class extends Component {
     e.preventDefault();
     const elements = e.target.elements;
     const gameName = elements['game'].value.trim().replace(/[^\w- ]/g, '');
-    const isLeadersGame = gameName.indexOf('lead') === 0;
+    const variant = elements['variant'].value;
+    const side = elements['side'].value || (Math.random() < 0.5 ? 'A' : 'B');
     const numPlayers = parseInt(elements['players'].value, 10);
     if (!gameName || gameName.length > GAME_NAME_MAX_LENGTH || !isFinite(numPlayers) ||
         numPlayers < PLAYERS_MIN || numPlayers > PLAYERS_MAX) {
       alert(`Enter a short name, with ${PLAYERS_MIN}-${PLAYERS_MAX} players.`);
+      return;
+    }
+    if (!Object.values(GameVariant).includes(variant)) {
+      alert(`Game variant not supported.`);
+      return;
+    }
+    if (side !== 'A' && side !== 'B') {
+      alert(`Pick a valid side. (Come on, you can do better than that.)`);
       return;
     }
 
@@ -139,12 +147,13 @@ const Lobby = withRouter(class extends Component {
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         name: gameName,
         players: [],
-        playerCount: numPlayers
+        playerCount: numPlayers,
+        variant: variant,
       };
       // TODO: Leaders
       updates[`/gamedetails/${key}`] = {
-        boards: shuffleWonders(numPlayers),
-        hands: shuffleCards(numPlayers, isLeadersGame),
+        boards: shuffleWonders(numPlayers, side),
+        hands: shuffleCards(numPlayers, variant),
         turns: []
       };
       return firebase.database().ref().update(updates);
@@ -192,6 +201,28 @@ const Lobby = withRouter(class extends Component {
           <div className="Lobby-input">
             <label>
               Number of players: <input name="players" type="number" autoComplete="off" />
+            </label>
+          </div>
+          <div className="Lobby-input">
+            Variant: <label>
+              <input name="variant" type="radio" value={GameVariant.ORIGINAL} defaultChecked /><span>Original</span>
+            </label>
+            <label>
+              <input name="variant" type="radio" value={GameVariant.LEADERS} /><span>Leaders</span>
+            </label>
+            <label>
+              <input name="variant" type="radio" value={GameVariant.WRECK} /><span>"Wreck-a-nation"</span>
+            </label>
+          </div>
+          <div className="Lobby-input">
+            Side: <label>
+              <input name="side" type="radio" value="" defaultChecked /><span>Random</span>
+            </label>
+            <label>
+              <input name="side" type="radio" value="A" /><span>A</span>
+            </label>
+            <label>
+              <input name="side" type="radio" value="B" /><span>B</span>
             </label>
           </div>
           <div className="Lobby-input">

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import * as firebase from 'firebase';
 import GameUI from './GameUI.js';
+import { GameVariant } from './misc.js';
 import ScoreCard from './ScoreCard.js';
 import SevenWonders from './SevenWonders.js';
 import fakeAuth from './fakeAuth.js';
@@ -70,7 +71,8 @@ class Game extends Component {
           hands: details.hands,
           name: game.name,
           playerCount: game.playerCount,
-          playerNames: game.players
+          playerNames: game.players,
+          variant: game.variant,
         };
       });
     }).then(this.loadGame).catch((error) => {
@@ -121,8 +123,10 @@ class Game extends Component {
       interfaces[interfaceIndex].pendingTurns.push(turn);
       interfaces[interfaceIndex].process();
     });
+    const isWreck = game.variant === GameVariant.WRECK || (!game.variant && game.name.indexOf('wreck') === 0);
+    const isLeaders = game.variant === GameVariant.LEADERS || (!game.variant && game.name.indexOf('lead') === 0);
     this.currGame = new SevenWonders(
-      interfaces, game.boards, game.hands, game.name.indexOf('wreck') === 0, this.endGame, game.name.indexOf('lead') === 0);
+      interfaces, game.boards, game.hands, isWreck, this.endGame, isLeaders);
   }
 
   render() {

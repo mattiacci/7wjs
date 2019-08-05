@@ -1,3 +1,12 @@
+const GameVariant = {
+  // Official variants
+  ORIGINAL: 'original',
+  LEADERS: 'leaders',
+
+  // and some custom ones
+  WRECK: 'wreck'
+};
+
 const Resource = {
   CLAY: 0,
   STONE: 1,
@@ -768,6 +777,7 @@ export {
   LEADERS,
   Action,
   CardType,
+  GameVariant,
   PlayerState,
   Resource,
   Scoring,

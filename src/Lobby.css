@@ -9,3 +9,66 @@
 .Lobby-input {
   margin: 6px 0;
 }
+
+.Lobby-input {
+  position: relative;
+}
+.Lobby-input input[type=radio] {
+  -webkit-appearance: none;
+  position: absolute;
+}
+.Lobby-input input[type=radio] + span {
+  background: linear-gradient(#fff, #f2f2f2 2px, #e2e2e2);
+  border: 1px solid #999;
+  display: inline-block;
+  font-size: 13.333px;
+  line-height: 15px;
+  padding: 2px 7px;
+  position: relative;
+  transition: padding-right;
+  user-select: none;
+}
+.Lobby-input label {
+  display: inline-block;
+}
+.Lobby-input label:not(:first-child) input[type=radio] + span {
+  margin-left: -1px; /* collapse border with left sibling */
+}
+.Lobby-input label:first-child input[type=radio] + span {
+  border-radius: 5px 0 0 5px;
+}
+.Lobby-input label:last-child input[type=radio] + span {
+  border-radius: 0 5px 5px 0;
+}
+.Lobby-input input[type=radio]:hover + span,
+.Lobby-input input[type=radio]:focus + span {
+  border-color: #888;
+}
+.Lobby-input input[type=radio]:active + span {
+  background: linear-gradient(to top, #fff, #f2f2f2 2px, #e2e2e2);
+}
+.Lobby-input input[type=radio]:focus + span {
+  outline: -webkit-focus-ring-color auto 1px;
+  z-index: 1;
+}
+.Lobby-input input[type=radio] + span::after {
+  content: "✔";
+  display: inline-flex;
+  right: 0;
+  overflow: hidden;
+  position: absolute;
+  transition: visibility, width;
+  visibility: hidden;
+  width: 0;
+}
+.Lobby-input input[type=radio] + span,
+.Lobby-input input[type=radio] + span::after {
+  transition-duration: .2s;
+}
+.Lobby-input input[type=radio]:checked + span {
+  padding-right: 19px;
+}
+.Lobby-input input[type=radio]:checked + span::after {
+  visibility: visible;
+  width: 16px;
+}

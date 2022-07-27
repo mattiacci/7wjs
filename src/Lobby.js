@@ -184,6 +184,7 @@ const Lobby = withRouter(class extends Component {
             <tr style={{textAlign: 'left'}}>
               <th>Name</th>
               <th>Players</th>
+              <th>Chronology</th>
               <th>Join</th>
             </tr>
           </thead>
@@ -239,6 +240,7 @@ const Lobby = withRouter(class extends Component {
       <tr key={game.name} className={game.completedAt ? 'Lobby-completed' : ''}>
         <td>{game.name}</td>
         <td>{game.players.join(', ')}</td>
+        <td>{`${new Date(game.createdAt).toLocaleString()} - ${game.completedAt ? new Date(game.completedAt).toLocaleString() : '...'}`}</td>
         <td>
           <Link to={process.env.PUBLIC_URL + `/game/${game.name}`}>
             <button>Join</button>

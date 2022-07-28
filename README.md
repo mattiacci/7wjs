@@ -2,17 +2,9 @@
 
 ## First Time Setup
 
-### Install NodeJS 8+
+### Install NodeJS 16+
 
-On Debian or Ubuntu-based Linux distros, including Ubuntu on Windows 10 via
-WSL, you can do this by running:
-```
-sudo apt-get install -y build-essential nodejs npm
-```
-
-You can find
-[instructions for other operating systems](https://nodejs.org/en/download/package-manager/)
-at nodejs.org.
+The easiest way is via `nvm`, but it's up to you: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm.
 
 ### Install Project Dependencies
 

@@ -1,7 +1,7 @@
 import { Action } from './misc.js';
 import SevenWonders from './SevenWonders.js';
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000; // 10 second timeout
+jest.setTimeout(10000); // 10 second timeout
 
 const PLAYERS = ["Michael", "Kylia", "Asala"];
 const WONDERS = [{"name":"Gizah","side":"A"},{"name":"Alexandria","side":"A"},{"name":"Ephesos","side":"A"}];

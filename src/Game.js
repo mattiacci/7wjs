@@ -3,7 +3,8 @@ import React, { Component } from 'react';
 // See https://facebook.github.io/react/docs/installation.html for info.
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import * as firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/database';
 import GameUI from './GameUI.js';
 import { GameVariant } from './misc.js';
 import ScoreCard from './ScoreCard.js';

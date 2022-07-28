@@ -7,7 +7,7 @@ import {
   Switch,
   withRouter
 } from 'react-router-dom';
-import * as firebase from 'firebase';
+import firebase from 'firebase/app';
 import fakeAuth from './fakeAuth.js';
 import Game from './Game.js';
 import Lobby from './Lobby.js';

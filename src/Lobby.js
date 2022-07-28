@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import * as firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/database';
 import { Link, withRouter } from 'react-router-dom';
 import { AGE1DECK, AGE2DECK, AGE3DECK, GameVariant, LEADERS, WONDERS } from './misc.js';
 import './Lobby.css';
